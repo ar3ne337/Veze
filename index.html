@@ -37,7 +37,7 @@
   </div>
 
   <!-- ===== GALLERY ART VIEWER (overlay) ===== -->
-  <div id="vz-gallery-viewer" class="vz-hidden vz-art-viewer">
+  <div id="vz-gallery-viewer" class="vz-hidden vz-art-viewer vz-outlined">
     <div class="vz-art-viewer-details">
       <div class="vz-art-viewer-title">Title</div>
     </div>
@@ -46,7 +46,7 @@
   </div>
 
   <!-- ===== PINS ART VIEWER (overlay) ===== -->
-  <div id="vz-pins-viewer" class="vz-hidden vz-art-viewer">
+  <div id="vz-pins-viewer" class="vz-hidden vz-art-viewer vz-outlined">
     <div class="vz-art-viewer-details">
       <div class="vz-art-viewer-title">Title</div>
     </div>
@@ -60,7 +60,7 @@
     <header>
       <div id="vz-site-title">Veze✗</div>
       <div id="vz-page-title">about me</div>
-      <div id="vz-control-panel">
+      <div id="vz-control-panel" class="vz-outlined">
         <div id="vz-volume-slider-wrapper" class="vz-outlined">
           <input type="range" min="0" max="1" step="0.001" id="vz-volume-slider">
         </div>
@@ -72,7 +72,7 @@
 
     <!-- ----- Navigation Sidebar ----- -->
     <nav class="vz-outlined">
-      <div id="vz-nav-rose" class="vz-bright-outlined"></div>
+      <div id="vz-nav-rose" class="vz-outlined"></div>
 
       <!-- Page navigation buttons -->
       <div class="vz-outlined vz-nav-btn" context="General Site Info">about</div>
@@ -102,7 +102,7 @@
 
     <!-- ----- Main Content Area ----- -->
     <main class="vz-outlined">
-      <div id="vz-context"></div>
+      <div id="vz-context" class="vz-outlined"></div>
 
       <!-- PAGE: About -->
       <div id="vz-page-about" class="vz-hidden vz-page" context="what is this site">
@@ -112,7 +112,7 @@
             <span style="color: grey; text-shadow: none"></span>
           </h2>
         </div>
-        <div id="vz-about-headshot" class="vz-bright-outlined"></div>
+        <div id="vz-about-headshot" class="vz-outlined"></div>
         <div id="vz-about-description" class="vz-outlined">
           <li label="name">Rose</li>
           <li label="gender">Female</li>
@@ -136,7 +136,7 @@
             <div class="vz-gallery-column"></div>
           </div>
         </div>
-        <div id="vz-gallery-mask"></div>
+        <div id="vz-gallery-mask" class="vz-outlined"></div>
       </div>
 
       <!-- PAGE: Pins (showcase) -->
@@ -193,13 +193,13 @@
       <!-- PAGE: Chronicle -->
       <div id="vz-page-chronicle" class="vz-hidden vz-page" context="Chronicles of the creature">
         <div id="vz-chronicle-container" class="vz-outlined">
-          <div id="vz-chronicle-sidebar">
+          <div id="vz-chronicle-sidebar" class="vz-outlined">
             <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Poem.html">I. Poem</div>
             <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Video.html">II. Honor</div>
             <div class="vz-chronicle-btn vz-outlined" data-url="https://example.com/3">Chronicle III</div>
             <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Terminal.html">IV. Terminal</div>
           </div>
-          <div id="vz-chronicle-content">
+          <div id="vz-chronicle-content" class="vz-outlined">
             <iframe id="vz-chronicle-iframe" src="about:blank" title="Chronicle Content"></iframe>
           </div>
         </div>
