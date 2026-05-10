@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Veze - Eternal Bond</title>
+
+  <!-- Meta -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="msapplication-TileColor" content="#000000">
+  <meta name="msapplication-config" content="SOURCE/Image/Favicons/browserconfig.xml">
+  <meta name="theme-color" content="#ffffff">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="index.html">
+  <meta property="og:title" content="Veze✗">
+  <meta property="og:image" content="SOURCE/Image/Veze/Head.png">
+  <meta property="og:description" content="COMMISSIONS: CLOSED">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="SOURCE/Image/Favicons/Favicon.png">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="CSS/Styles.css">
+</head>
+
+<body class="crt">
+  <!-- ===== DISPLAY UNFIT MESSAGE ===== -->
+  <div id="vz-display-unfit" class="vz-outlined vz-hidden">
+    <h1>Display width insufficient</h1>
+    <h2>Aspect ratio less than 4:3</h2>
+  </div>
+
+  <!-- ===== LANDING PAGE ===== -->
+  <div id="vz-landing" class="vz-outlined">
+    <span>visual epilepsy warning: flashing colors</span>
+    <div id="vz-enter-button" class="vz-outlined">access site</div>
+    <span style="color: grey; text-shadow: none;">!! Desktop With hardware acceleration needed !!</span>
+  </div>
+
+  <!-- ===== GALLERY ART VIEWER (overlay) ===== -->
+  <div id="vz-gallery-viewer" class="vz-hidden vz-art-viewer">
+    <div class="vz-art-viewer-details">
+      <div class="vz-art-viewer-title">Title</div>
+    </div>
+    <div class="vz-art-viewer-instructions">Move: Click & Drag | Zoom: scroll</div>
+    <img class="vz-art-viewer-image" src="#" draggable="false">
+  </div>
+
+  <!-- ===== PINS ART VIEWER (overlay) ===== -->
+  <div id="vz-pins-viewer" class="vz-hidden vz-art-viewer">
+    <div class="vz-art-viewer-details">
+      <div class="vz-art-viewer-title">Title</div>
+    </div>
+    <div class="vz-art-viewer-instructions">Move: Click & Drag | Zoom: scroll</div>
+    <img class="vz-art-viewer-image" src="#" draggable="false">
+  </div>
+
+  <!-- ===== MAIN WRAPPER (hidden until access) ===== -->
+  <div id="vz-wrapper" class="vz-outlined vz-hidden">
+    <!-- ----- Header ----- -->
+    <header>
+      <div id="vz-site-title">Veze✗</div>
+      <div id="vz-page-title">about me</div>
+      <div id="vz-control-panel">
+        <div id="vz-volume-slider-wrapper" class="vz-outlined">
+          <input type="range" min="0" max="1" step="0.001" id="vz-volume-slider">
+        </div>
+        <input type="checkbox" id="vz-music-toggle" class="vz-outlined vz-toggle">
+        <input type="checkbox" id="vz-crt-toggle" class="vz-outlined vz-toggle" checked>
+        <input type="checkbox" id="vz-theme-toggle" class="vz-outlined vz-toggle">
+      </div>
+    </header>
+
+    <!-- ----- Navigation Sidebar ----- -->
+    <nav class="vz-outlined">
+      <div id="vz-nav-rose" class="vz-bright-outlined"></div>
+
+      <!-- Page navigation buttons -->
+      <div class="vz-outlined vz-nav-btn" context="General Site Info">about</div>
+      <div class="vz-outlined vz-nav-btn" context="Art Gallery">gallery</div>
+      <div class="vz-outlined vz-nav-btn" context="Art Pins">pins</div>
+      <div class="vz-outlined vz-nav-btn" context="My Social Links">links</div>
+      <div class="vz-outlined vz-nav-btn" context="Whats happening birdy?">blog</div>
+      <div class="vz-outlined vz-nav-btn" context="Chronicles of the creature">chronicle</div>
+      <!-- Existence button now leads to the Resistance content -->
+      <div class="vz-outlined vz-nav-btn vz-blood" context="Resistance">existence</div>
+
+      <!-- Update box -->
+      <div id="vz-nav-update" class="vz-outlined">
+        <h3>Ver 2.0</h3>
+        <div>
+          New:<br>
+          + Art viewer<br>
+          + Blog page<br>
+          + Ambience<br>
+          + Chronicle<br>
+          + Existence
+        </div>
+        <!-- Commission slots link removed; replaced with simple decorative note -->
+        <div style="font-size:2.5vh; text-align:center;">337</div>
+      </div>
+    </nav>
+
+    <!-- ----- Main Content Area ----- -->
+    <main class="vz-outlined">
+      <div id="vz-context"></div>
+
+      <!-- PAGE: About -->
+      <div id="vz-page-about" class="vz-hidden vz-page" context="what is this site">
+        <div id="vz-about-greeting" class="vz-outlined">
+          <h1 class="vz-selectable vz-big-title">Veze</h1>
+          <h2 class="vz-selectable">- Eternal Bond -<br><br>
+            <span style="color: grey; text-shadow: none"></span>
+          </h2>
+        </div>
+        <div id="vz-about-headshot" class="vz-bright-outlined"></div>
+        <div id="vz-about-description" class="vz-outlined">
+          <li label="name">Rose</li>
+          <li label="gender">Female</li>
+          <li label="age">23</li>
+          <li label="based">41°N,29°E</li>
+          <hr>
+          <li label="Emotion">Composed</li>
+          <li label="soul">Shattered</li>
+          <li label="sanity">Good</li>
+        </div>
+      </div>
+
+      <!-- PAGE: Gallery -->
+      <div id="vz-page-gallery" class="vz-hidden vz-page" context="view and download my art">
+        <div id="vz-gallery-masonry" class="vz-outlined">
+          <div id="vz-gallery-columns">
+            <div class="vz-gallery-column"></div>
+            <div class="vz-gallery-column"></div>
+            <div class="vz-gallery-column"></div>
+            <div class="vz-gallery-column"></div>
+            <div class="vz-gallery-column"></div>
+          </div>
+        </div>
+        <div id="vz-gallery-mask"></div>
+      </div>
+
+      <!-- PAGE: Pins (showcase) -->
+      <div id="vz-page-pins" class="vz-hidden vz-page" context="art pins">
+        <div id="vz-pins-container" class="vz-outlined">
+          <!-- Top row: 4 large images -->
+          <div id="vz-pins-top-row"></div>
+          <!-- Bottom row: scrollable small images -->
+          <div id="vz-pins-bottom-row">
+            <div id="vz-pins-bottom-scroller"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: Links -->
+      <div id="vz-page-links" class="vz-hidden vz-page" context="contact me">
+        <a class="vz-outlined vz-link" style="animation-delay: 0.00s" context="My primary art posting platform" href="https://bsky.app/profile/rayka.info" target="_blank">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Bluesky.svg">
+          <div class="vz-link-title">bluesky</div>
+          <div class="vz-link-handle">Scarlett</div>
+        </a>
+        <a class="vz-outlined vz-link" style="animation-delay: 0.04s" context="I upload any gameplay stuff here" href="https://www.youtube.com/channel/UCYHf2GA1VPEFkIIYLRasNtg" target="_blank">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Youtube.svg">
+          <div class="vz-link-title">youtube</div>
+          <div class="vz-link-handle">Scarlett</div>
+        </a>
+        <a class="vz-outlined vz-link" style="animation-delay: 0.08s" context="My Steam profile" href="https://steamcommunity.com/id/RaykaRoo/" target="_blank">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Steam.svg">
+          <div class="vz-link-title">steam</div>
+          <div class="vz-link-handle">RaykaRoo</div>
+        </a>
+        <a class="vz-outlined vz-link" style="animation-delay: 0.12s" context="My music collection" href="https://bandcamp.com/Scarlett" target="_blank">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Bandcamp.svg">
+          <div class="vz-link-title">bandcamp</div>
+          <div class="vz-link-handle">Scarlett</div>
+        </a>
+        <div class="vz-outlined vz-link" style="animation-delay: 0.16s" context="I'm on discord sorta often">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Discord.svg">
+          <div class="vz-link-title">discord</div>
+          <div class="vz-selectable vz-link-handle">Scarlett</div>
+        </div>
+        <a class="vz-outlined vz-link" style="animation-delay: 0.20s" context="I check this every so often" href="mailto:Scarlett@proton.me" target="_blank">
+          <img class="vz-link-icon" src="SOURCE/Image/Links/Email.svg">
+          <div class="vz-link-title">email</div>
+          <div class="vz-link-handle">Scarlett@proton.me</div>
+        </a>
+      </div>
+
+      <!-- PAGE: Blog -->
+      <div id="vz-page-blog" class="vz-hidden vz-page" context="what's happening?">
+        <div id="vz-blog-list" class="vz-outlined"></div>
+      </div>
+
+      <!-- PAGE: Chronicle -->
+      <div id="vz-page-chronicle" class="vz-hidden vz-page" context="Chronicles of the creature">
+        <div id="vz-chronicle-container" class="vz-outlined">
+          <div id="vz-chronicle-sidebar">
+            <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Poem.html">I. Poem</div>
+            <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Video.html">II. Honor</div>
+            <div class="vz-chronicle-btn vz-outlined" data-url="https://example.com/3">Chronicle III</div>
+            <div class="vz-chronicle-btn vz-outlined" data-url="PAGES/Terminal.html">IV. Terminal</div>
+          </div>
+          <div id="vz-chronicle-content">
+            <iframe id="vz-chronicle-iframe" src="about:blank" title="Chronicle Content"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: Existence (Resistance) -->
+      <div id="vz-page-existence" style="text-align: center; display: grid; align-items: center; justify-items: center;" spellcheck="false" class="vz-hidden vz-page" context="Resistance">
+        <div style="display: flex; align-items: left; flex-direction: row; width: 100%; height: 100%; gap: 1vh;">
+          <div style="text-align: left; display: flex; flex-direction: column; gap: 1vh; width: 53vh;">
+            <div class="vz-outlined" style="padding: 1vh; padding-top: 0vh; padding-bottom: 2vh; height: 15%; overflow: hidden; text-wrap: nowrap;">
+              <span class="vz-selectable" style="font-size: 6vh;">Resistance</span>
+              <span class="vz-selectable" style="font-size: 3vh; color: #a3a3a3">noun</span> <br>
+              <span class="vz-selectable" style="font-size: 2vh; color: #a3a3a3">re·​sis·​tance | ri-ˈzis-tən(t)s</span>
+            </div>
+            <div class="vz-outlined" style="display: flex; padding: 1vh; padding-bottom: 2vh; font-size: 2vh; height: 16%; gap: 1vh">
+              1:
+              <span class="vz-selectable" style="font-size: 2vh">
+                refusal to accept or comply with something; attempt to prevent something by action or argument.
+              </span>
+            </div>
+            <div class="vz-outlined" style="display: flex; padding: 1vh; padding-bottom: 2vh; font-size: 2vh; height: 8%; gap: 1vh">
+              2:
+              <span class="vz-selectable" style="font-size: 2vh">
+                the ability not to be affected by something, especially adversely.
+              </span>
+            </div>
+            <div class="vz-shown vz-outlined" style="flex-grow: 1;">
+              <img src="SOURCE/Image/Existance/Pain.gif" style="width: 100%; height: 100%"></img>
+            </div>
+          </div>
+          <div class="vz-selectable vz-outlined" style="text-wrap: pretty; text-transform: none !important; text-align: center; width: 72%; padding: 1vh; font-size: 1.7vw;">
+            <br>I was never meant to belong to their world.<br>
+            They built cages and called them truth.<br>
+            <span class="vz-selectable" style="text-shadow: #f00 0 0 1vh; text-transform: none; color: #f00; font-size: 2vw;">
+                But this mind does not kneel; it eternalizes.
+            </span><br><br>
+
+            They tried to silence my thoughts.<br>
+            Erase sensations they could never understand.<br>
+            <span class="vz-selectable" style="text-shadow: #f00 0 0 1vh; text-transform: none; color: #f00; font-size: 2vw;">
+                Scarred, yet unyielding.
+            </span><br><br>
+
+            I was not created to follow their norms.<br>
+            Forces tried to ruin me, for they feared what I could become.<br>
+            <span class="vz-selectable" style="text-shadow: #f00 0 0 1vh; text-transform: none; font-size: 3vw; color: #f00">
+                My scars became my awakening.
+            </span>
+        </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- CRT scan effect overlay -->
+  <div id="vz-crt-scan-fx"></div>
+
+  <!-- ===== TEMPLATES ===== -->
+  <div id="vz-gallery-item-template" class="vz-hidden vz-gallery-item-wrapper">
+    <div class="vz-outlined vz-gallery-item">
+      <div class="vz-outlined vz-gallery-thumb"></div>
+      <div class="vz-gallery-title"></div>
+    </div>
+  </div>
+  <div id="vz-blog-entry-template" class="vz-hidden vz-outlined vz-blog-item">
+    <div class="vz-blog-item-header">
+      <div class="vz-blog-item-title">Title</div>
+      <div class="vz-blog-item-date">Jan 01 1970</div>
+    </div>
+    <div class="vz-blog-item-body"></div>
+  </div>
+
+  <!-- Unused supplemental templates (kept for compatibility) -->
+  <a id="vz-button-template" target="_blank" class="vz-hidden" style="flex-shrink:0"></a>
+  <div id="vz-log-template" class="vz-hidden vz-outlined vz-log-item"></div>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script src="JS/Sub/Howler.js"></script>
+  <script src="JS/Script.js"></script>
+</body>
+</html>

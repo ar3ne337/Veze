@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conquest Mother · Ar3ne</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Garamond', 'Times New Roman', 'Palatino', serif;
+            padding: 2rem 1.5rem;
+            margin: 0;
+        }
+
+        .poem-wrapper {
+            max-width: 780px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff2a2a;
+            font-size: 3.4rem;
+            font-weight: 400;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 0.2rem;
+            font-family: 'Cinzel', 'Garamond', 'Times New Roman', serif;
+            word-spacing: 8px;
+            text-shadow: 
+                0 0 8px #ff0000,
+                0 0 18px #aa2222,
+                0 0 30px #7a0f0f;
+        }
+
+        .poet-credit {
+            color: #e05a5a;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            margin-top: -0.1rem;
+            margin-bottom: 1.8rem;
+            font-style: italic;
+            text-transform: uppercase;
+            opacity: 0.95;
+            text-shadow: 
+                0 0 6px #b31b1b,
+                0 0 12px #6b0f0f;
+        }
+
+        .rose-glow {
+            color: #ff9999;
+            text-shadow: 
+                0 0 8px #ff0000,
+                0 0 16px #ff0000,
+                0 0 32px #ff0000,
+                0 0 48px #aa0000;
+        }
+
+        .verse {
+            color: #ffffff;
+            font-size: 1.5rem;
+            line-height: 1.35;                /* tightened line spacing */
+            font-weight: 350;
+            text-align: center;
+            white-space: pre-line;
+            font-family: 'Garamond', 'Baskerville', 'Times New Roman', serif;
+            text-shadow: 
+                0 0 6px rgba(255, 255, 255, 0.9),
+                0 0 16px rgba(255, 200, 200, 0.5),
+                0 0 28px rgba(220, 80, 80, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        /* reduce space between stanzas — smaller gap after <br><br> */
+        .verse br + br {
+            display: block;
+            content: "";
+            margin-top: 0.1rem;               /* almost no extra space between stanzas */
+        }
+
+        @media (max-width: 550px) {
+            body { padding: 1rem 0.8rem; }
+            h1 { font-size: 2.4rem; letter-spacing: 3px; }
+            .verse { font-size: 1.25rem; line-height: 1.3; }
+        }
+
+        /* Hide scrollbars across browsers */
+        * {
+            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  /* IE/Edge */
+        }
+
+        *::-webkit-scrollbar {
+            display: none;  /* WebKit browsers */
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&display=swap');
+    </style>
+
+</head>
+<body>
+
+<div class="poem-wrapper">
+    <h1>CONQUEST MOTHER</h1>
+    <div class="poet-credit">by Ar3ne "<span class="rose-glow">Rose</span>"</div>
+    <div class="verse">
+        Atop her throne of briars and bone,<br>
+        The queen reigns, her conquest hushed.<br>
+        My hand, torn by her sweet lament,<br>
+        Bears a nail driven through stone and silken rust.<br>
+        <br>
+        A giant slumbers in the withered plains,<br>
+        Her grave a sprawl of splintered cross and shale.<br>
+        From her spine, a lineage of grief unfurls,<br>
+        Her cloak, a shroud, exacts the toll of farewell.<br>
+        <br>
+        Mothers to our toppled groves, they stand—<br>
+        Regret, a quickening pang, claws at the end.<br>
+        In anguish’s bloom, we cling to fallen boughs,<br>
+        Our roots entwined with hers, unyielding, condemned.
+    </div>
+</div>
+
+</body>
+</html>

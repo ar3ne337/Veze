@@ -1,0 +1,38 @@
+{
+  "big": [
+    {
+      "file": "pin1.jpg",
+      "ar": "0.56"
+    },
+    {
+      "file": "pin2.webp",
+      "ar": "0.56"
+    },
+    {
+      "file": "pin3.jpg",
+      "ar": "0.56"
+    },
+    {
+      "file": "pin4.webp",
+      "ar": "0.56"
+    }
+  ],
+  "small": [
+    {
+      "file": "pin5.webp",
+      "ar": "9/16"
+    },
+    {
+      "file": "pin6.jpg",
+      "ar": "9/16"
+    },
+    {
+      "file": "pin7.jpg",
+      "ar": "9/16"
+    },
+    {
+      "file": "pin8.jpg",
+      "ar": "9/16"
+    }
+  ]
+}

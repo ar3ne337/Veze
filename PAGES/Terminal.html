@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>A3Terminal · A3OS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000000;
+      min-height: 100vh;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0;
+      font-family: 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+      overflow: hidden;
+    }
+    .terminal {
+      width: 100%;
+      height: 100vh;
+      background: #000000;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .term-header {
+      background: #0a0a0a;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #1a1a1a;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .window-btn {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .window-btn.red { background: #ff5f56; }
+    .window-btn.yellow { background: #ffbd2e; }
+    .window-btn.green { background: #27c93f; }
+    .term-header span { color: #8ba5b9; font-size: 13px; }
+    .term-header i { color: #6a9c78; margin: 0 4px; }
+    .term-header img { width: 16px; height: 16px; margin-right: 4px; filter: brightness(0) invert(0.7); }
+    .output {
+      flex: 1;
+      background: #000000;
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      color: #c5d8e6;
+      word-break: break-word;
+    }
+    .output::-webkit-scrollbar { width: 8px; }
+    .output::-webkit-scrollbar-track { background: #0a0a0a; }
+    .output::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+    .line { white-space: pre-wrap; word-break: break-word; margin-bottom: 2px; }
+    .cmd-echo { color: #7c9cb0; }
+    .success { color: #8fcca8; }
+    .warning { color: #ddb87a; }
+    .error { color: #dd7a7a; }
+    .info { color: #8ab8d9; }
+    .game { color: #b98fd9; }
+    .matrix { color: #2ecc71; text-shadow: 0 0 4px #2ecc71; }
+    .hack { color: #ff6b6b; }
+    .input-area {
+      display: flex;
+      align-items: center;
+      background: #0a0a0a;
+      padding: 12px 16px;
+      border-top: 1px solid #1a1a1a;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .prompt { color: #7cb083; font-weight: bold; margin-right: 10px; font-size: 14px; }
+    .path { color: #9bbbcf; margin-right: 10px; font-size: 13px; white-space: nowrap; }
+    #cmdInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e3ecf3;
+      font-family: inherit;
+      font-size: 14px;
+      min-width: 120px;
+    }
+    #cmdInput::placeholder { color: #3a5a6a; }
+    .cursor {
+      width: 8px;
+      height: 18px;
+      background: #7cb083;
+      margin-left: 8px;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .status-bar {
+      background: #0a0a0a;
+      padding: 6px 16px;
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid #1a1a1a;
+      color: #6d8a9e;
+      font-size: 11px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .status-bar span { display: flex; align-items: center; gap: 4px; }
+    .status-bar img { width: 14px; height: 14px; filter: brightness(0) invert(0.6); }
+    .ascii-art { font-size: 10px; line-height: 1.2; white-space: pre; color: #8fcca8; }
+    @media (max-width: 600px) {
+      .ascii-art { font-size: 7px; }
+      .path { max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="terminal">
+  <div class="term-header">
+    <div class="window-controls">
+      <div class="window-btn red"></div>
+      <div class="window-btn yellow"></div>
+      <div class="window-btn green"></div>
+    </div>
+    <span style="margin-left: 16px;"><img src="https://api.iconify.design/mdi:account.svg?color=%238ba5b9" alt="user"> user@A3Terminal:~</span>
+    <span style="margin-left: auto;"><img src="https://api.iconify.design/mdi:terminal.svg?color=%236a9c78" alt="terminal"> A3Terminal | A3OS</span>
+  </div>
+  <div id="output" class="output"></div>
+  <div class="input-area">
+    <span class="prompt">$</span>
+    <span id="pathDisplay" class="path">~/</span>
+    <input type="text" id="cmdInput" placeholder="Type command..." autofocus autocomplete="off" spellcheck="false">
+    <div class="cursor"></div>
+  </div>
+  <div class="status-bar">
+    <span><img src="https://api.iconify.design/mdi:check-circle.svg?color=%236d8a9e" alt="online"> ONLINE</span>
+    <span id="fileCount"><img src="https://api.iconify.design/mdi:folder.svg?color=%236d8a9e" alt="fs"> FS: 7 dirs, 15 files</span>
+    <span id="uptime"><img src="https://api.iconify.design/mdi:clock-outline.svg?color=%236d8a9e" alt="time"> 0h 0m</span>
+    <span><img src="https://api.iconify.design/mdi:web.svg?color=%236d8a9e" alt="net"> NET: CONNECTED</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ========== RANDOM FIRST-TIME, PERSISTENT STORAGE ==========
+  const STORAGE_KEY = 'a3term_targets_v6';
+  const FS_STORAGE_KEY = 'a3term_filesystem_v2';
+  const DEV_STATE_KEY = 'a3term_dev_state';
+  
+  let targetStore = {};
+  let devState = {};
+
+  function loadStorage() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) targetStore = JSON.parse(saved);
+      
+      const devSaved = localStorage.getItem(DEV_STATE_KEY);
+      if (devSaved) devState = JSON.parse(devSaved);
+    } catch(e) { 
+      targetStore = {}; 
+      devState = {};
+    }
+  }
+  
+  function saveStorage() {
+    try { 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(targetStore));
+      localStorage.setItem(DEV_STATE_KEY, JSON.stringify(devState));
+    } catch(e) {}
+  }
+  
+  loadStorage();
+
+  // Random generators
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const randFloat = (min, max, decimals = 1) => (Math.random() * (max - min) + min).toFixed(decimals);
+  const randomIP = () => `${rand(1,223)}.${rand(0,255)}.${rand(0,255)}.${rand(1,254)}`;
+  
+  const randomPassword = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    const length = rand(8, 16);
+    let pass = '';
+    for (let i = 0; i < length; i++) {
+      pass += chars[rand(0, chars.length - 1)];
+    }
+    return pass;
+  };
+
+  const randomHash = () => {
+    return Array(32).fill(0).map(() => '0123456789abcdef'[rand(0,15)]).join('');
+  };
+
+  function getTargetData(target, generator) {
+    const key = target.toLowerCase().trim();
+    if (!key) return null;
+    if (!targetStore[key]) {
+      targetStore[key] = generator();
+      saveStorage();
+    }
+    return targetStore[key];
+  }
+
+  // ========== STATE ==========
+  const output = document.getElementById('output');
+  const input = document.getElementById('cmdInput');
+  const pathDisplay = document.getElementById('pathDisplay');
+  const uptimeEl = document.getElementById('uptime');
+  const fileCountEl = document.getElementById('fileCount');
+
+  let currentPath = '~';
+  const user = 'dev';
+  const host = 'A3Terminal';
+
+  let activeGame = null;
+  let gameData = {};
+  let matrixInterval = null;
+
+  const history = [];
+  let historyIdx = -1;
+
+  // Filesystem
+  let fs = {};
+
+  function initFilesystem() {
+    try {
+      const saved = localStorage.getItem(FS_STORAGE_KEY);
+      if (saved) {
+        fs = JSON.parse(saved);
+      } else {
+        fs = {
+          '~': { type: 'dir', children: ['Documents', 'Projects', 'Downloads', '.config', 'readme.txt', '.bashrc', 'logs'] },
+          '~/Documents': { type: 'dir', children: ['notes.md', 'todo.txt', 'secrets.txt'] },
+          '~/Projects': { type: 'dir', children: ['web', 'python', 'games'] },
+          '~/Downloads': { type: 'dir', children: ['image.png', 'archive.zip'] },
+          '~/.config': { type: 'dir', children: ['settings.json'] },
+          '~/logs': { type: 'dir', children: ['system.log', 'access.log'] },
+          '~/readme.txt': { type: 'file', content: 'Professional Terminal v3.0\nAll commands simulated & functional.\nWelcome to A3OS!' },
+          '~/.bashrc': { type: 'file', content: 'alias ll="ls -la"\nexport PATH=$PATH:~/bin\nexport EDITOR=vim' },
+          '~/Documents/notes.md': { type: 'file', content: '# Project Notes\n- Complete terminal\n- Add more features\n- Fix bugs' },
+          '~/Documents/todo.txt': { type: 'file', content: '[ ] Update docs\n[x] Fix bugs\n[ ] Deploy\n[ ] Write tests' },
+          '~/Documents/secrets.txt': { type: 'file', content: 'API_KEY=simulated_key_12345\nSECRET_TOKEN=abc123def456' },
+          '~/Projects/web/index.html': { type: 'file', content: '<!DOCTYPE html>\n<html>\n<head><title>App</title></head>\n<body>Hello World</body>\n</html>' },
+          '~/Projects/web/style.css': { type: 'file', content: 'body { background: #0a0e15; color: #c5d8e6; }' },
+          '~/Projects/python/scanner.py': { type: 'file', content: '#!/usr/bin/env python3\nimport socket\n\ndef scan(host):\n    print(f"Scanning {host}...")' },
+          '~/Projects/python/exploit.py': { type: 'file', content: '# Proof of concept\ndef exploit():\n    return "pwned"' },
+          '~/Projects/games/snake.js': { type: 'file', content: '// Snake game implementation\nconst snake = {x: 10, y: 10};' },
+          '~/.config/settings.json': { type: 'file', content: '{\n  "theme": "professional",\n  "editor": "vim",\n  "terminal": "pro"\n}' },
+          '~/logs/system.log': { type: 'file', content: '[INFO] System started\n[INFO] All services running\n[INFO] User logged in' },
+          '~/logs/access.log': { type: 'file', content: '192.168.1.1 - - [17/Apr/2026:10:30:42] "GET /" 200\n192.168.1.2 - - [17/Apr/2026:10:31:15] "POST /login" 302' },
+        };
+        saveFilesystem();
+      }
+    } catch(e) {
+      fs = { '~': { type: 'dir', children: ['readme.txt'] }, '~/readme.txt': { type: 'file', content: 'Welcome to A3OS!' } };
+    }
+  }
+
+  function saveFilesystem() {
+    try { localStorage.setItem(FS_STORAGE_KEY, JSON.stringify(fs)); } catch(e) {}
+  }
+
+  function updateFileCount() {
+    const files = Object.values(fs).filter(n => n.type === 'file').length;
+    const dirs = Object.values(fs).filter(n => n.type === 'dir').length;
+    fileCountEl.innerHTML = `<img src="https://api.iconify.design/mdi:folder.svg?color=%236d8a9e" alt="fs"> FS: ${dirs} dirs, ${files} files`;
+  }
+
+  initFilesystem();
+
+  const boot = Date.now();
+  function updateUptime() {
+    const s = Math.floor((Date.now() - boot) / 1000);
+    uptimeEl.innerHTML = `<img src="https://api.iconify.design/mdi:clock-outline.svg?color=%236d8a9e" alt="time"> ${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+  }
+  setInterval(updateUptime, 1000);
+
+  function resolvePath(base, rel) {
+    if (!rel) return base;
+    if (rel === '~') return '~';
+    if (rel.startsWith('~/')) return rel;
+    if (rel.startsWith('/')) return '~' + rel;
+    let parts = base === '~' ? [] : base.split('/').filter(p => p && p !== '~');
+    const relParts = rel.split('/');
+    for (let p of relParts) {
+      if (p === '' || p === '.') continue;
+      if (p === '..') parts.pop();
+      else parts.push(p);
+    }
+    return parts.length === 0 ? '~' : '~/' + parts.join('/');
+  }
+
+  function getNode(path) {
+    return path === '~' ? fs['~'] : fs[path] || null;
+  }
+
+  function print(text, type = 'normal') {
+    const div = document.createElement('div');
+    div.className = 'line';
+    const typeMap = { cmd:'cmd-echo', success:'success', warning:'warning', error:'error', info:'info', game:'game', matrix:'matrix', hack:'hack' };
+    if (typeMap[type]) div.classList.add(typeMap[type]);
+    div.innerHTML = String(text).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    output.appendChild(div);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function printHtml(html, type) {
+    const div = document.createElement('div');
+    div.className = 'line';
+    if (type) div.classList.add(type);
+    div.innerHTML = html;
+    output.appendChild(div);
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function welcome() {
+    printHtml(`<pre class="ascii-art">
+   █████╗ ██████╗ ████████╗███████╗██████╗ ███╗   ███╗██╗███╗   ██╗ █████╗ ██╗
+  ██╔══██╗╚════██╗╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║████╗  ██║██╔══██╗██║
+  ███████║ █████╔╝   ██║   █████╗  ██████╔╝██╔████╔██║██║██╔██╗ ██║███████║██║
+  ██╔══██║ ╚═══██╗   ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║██║╚██╗██║██╔══██║██║
+  ██║  ██║██████╔╝   ██║   ███████╗██║  ██║██║ ╚═╝ ██║██║██║ ╚████║██║  ██║███████╗
+  ╚═╝  ╚═╝╚═════╝    ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+  </pre>`, 'success');
+    printHtml('<span style="color:#8fcca8;">═══════════════════════════════════════════════════════════════</span>');
+    printHtml('<span style="color:#8ab8d9;">   A3 TERMINAL · FULL DEV TOOLS · A3OS</span>');
+    printHtml('<span style="color:#8fcca8;">═══════════════════════════════════════════════════════════════</span>');
+    print('Type "help" for all commands.', 'info');
+    print(`Last login: ${new Date().toLocaleString()}`, 'success');
+    updateFileCount();
+  }
+
+  function updatePrompt() {
+    let p = currentPath;
+    if (p === '~') p = '~/';
+    else if (!p.endsWith('/') && !p.includes('.')) p += '/';
+    pathDisplay.textContent = p;
+  }
+
+  const TARGET_COMMANDS = ['ping', 'nmap', 'ssh', 'wget', 'curl', 'traceroute', 'dig', 'exploit', 'crack', 'hydra', 'sqlmap', 'john'];
+
+  function validateTarget(cmd, args) {
+    if (TARGET_COMMANDS.includes(cmd) && args.length < 2) {
+      print(`${cmd}: missing target (host/ip/url/hash/file)`, 'error');
+      return false;
+    }
+    return true;
+  }
+
+  function execute(cmdLine) {
+    const trimmed = cmdLine.trim();
+    if (!trimmed) return;
+    print(`$ ${trimmed}`, 'cmd');
+    const args = trimmed.split(/\s+/);
+    const cmd = args[0].toLowerCase();
+
+    if (activeGame) {
+      handleGameInput(cmd, args, trimmed);
+      return;
+    }
+
+    if (!validateTarget(cmd, args)) return;
+
+    if (cmd === 'help') showHelp();
+    else if (cmd === 'clear') output.innerHTML = '';
+    else if (cmd === 'ls') listDir(args[1]);
+    else if (cmd === 'cd') changeDir(args[1]);
+    else if (cmd === 'pwd') printWorkingDir();
+    else if (cmd === 'cat') viewFile(args[1]);
+    else if (cmd === 'mkdir') makeDir(args[1]);
+    else if (cmd === 'touch') touchFile(args[1]);
+    else if (cmd === 'rm') removeFile(args.slice(1));
+    else if (cmd === 'cp') copyFile(args[1], args[2]);
+    else if (cmd === 'mv') moveFile(args[1], args[2]);
+    else if (cmd === 'echo') print(args.slice(1).join(' '));
+    else if (cmd === 'date') print(new Date().toString());
+    else if (cmd === 'whoami') print(user);
+    else if (cmd === 'hostname') print(host);
+    else if (cmd === 'uptime') showUptime();
+    else if (cmd === 'df') showDf();
+    else if (cmd === 'free') showFree();
+    else if (cmd === 'ps') showPs();
+    else if (cmd === 'ping') ping(args[1]);
+    else if (cmd === 'nmap') nmap(args[1]);
+    else if (cmd === 'ifconfig') ifconfig();
+    else if (cmd === 'ssh') ssh(args[1]);
+    else if (cmd === 'wget') wget(args[1]);
+    else if (cmd === 'curl') curl(args[1]);
+    else if (cmd === 'grep') grep(args[1], args[2]);
+    else if (cmd === 'wc') wc(args[1]);
+    else if (cmd === 'head') head(args[1], args[2]);
+    else if (cmd === 'tail') tail(args[1], args[2]);
+    else if (cmd === 'chmod') chmod(args[1], args[2]);
+    else if (cmd === 'kill') kill(args[1]);
+    else if (cmd === 'git') git(args.slice(1));
+    else if (cmd === 'python' || cmd === 'python3') python(args.slice(1));
+    else if (cmd === 'node') nodejs(args.slice(1));
+    else if (cmd === 'npm') npm(args.slice(1));
+    else if (cmd === 'docker') docker(args.slice(1));
+    else if (cmd === 'systemctl') systemctl(args[1], args[2]);
+    else if (cmd === 'cowsay') cowsay(args.slice(1).join(' '));
+    else if (cmd === 'fortune') fortune();
+    else if (cmd === 'history') showHistory();
+    else if (cmd === 'matrix') startMatrix();
+    else if (cmd === 'wordle') startWordle();
+    else if (cmd === 'guess') startGuess();
+    else if (cmd === 'hacknet') startHacknet();
+    else if (cmd === 'scan') scanNetwork();
+    else if (cmd === 'exploit') exploit(args[1]);
+    else if (cmd === 'decrypt') decrypt();
+    else if (cmd === 'crack') crack(args[1]);
+    else if (cmd === 'hydra') hydra(args[1]);
+    else if (cmd === 'sqlmap') sqlmap(args[1]);
+    else if (cmd === 'metasploit') metasploit();
+    else if (cmd === 'aircrack') aircrack();
+    else if (cmd === 'john') john(args[1]);
+    else if (cmd === 'netstat') netstat();
+    else if (cmd === 'traceroute') traceroute(args[1]);
+    else if (cmd === 'dig') dig(args[1]);
+    else print(`command not found: ${cmd}`, 'error');
+  }
+
+  function showHelp() {
+    printHtml('<span style="color:#8fcca8;">═══════════════════════════════════════════════════════════════</span>');
+    printHtml('<span style="color:#b98fd9;">ALL COMMANDS (random first-time, then persistent)</span>');
+    printHtml('<span style="color:#8fcca8;">───────────────────────────────────────────────────────────────</span>');
+    printHtml('<span style="color:#8ab8d9;">📁 FILE:</span> <span style="color:#c5d8e6;">ls, cd, pwd, cat, mkdir, touch, rm, cp, mv</span>');
+    printHtml('<span style="color:#8ab8d9;">📊 SYSTEM:</span> <span style="color:#c5d8e6;">date, whoami, hostname, uptime, df, free, ps, kill &lt;pid&gt;</span>');
+    printHtml('<span style="color:#8ab8d9;">🌐 NETWORK:</span> <span style="color:#c5d8e6;">ping, nmap, ifconfig, ssh, wget, curl, traceroute, dig, netstat</span>');
+    printHtml('<span style="color:#8ab8d9;">🔧 DEV:</span> <span style="color:#c5d8e6;">git [status|log|branch|commit], python [script.py], node [script.js], npm [install|list], docker [ps|images|run], systemctl [start|stop|status] &lt;service&gt;</span>');
+    printHtml('<span style="color:#8ab8d9;">📝 TEXT:</span> <span style="color:#c5d8e6;">echo, grep, wc, head, tail, chmod</span>');
+    printHtml('<span style="color:#8ab8d9;">🎮 GAMES:</span> <span style="color:#c5d8e6;">matrix, wordle, guess, hacknet</span>');
+    printHtml('<span style="color:#8ab8d9;">💀 HACKING:</span> <span style="color:#c5d8e6;">scan, exploit, decrypt, crack, hydra, sqlmap, metasploit, aircrack, john</span>');
+    printHtml('<span style="color:#8ab8d9;">🎭 FUN:</span> <span style="color:#c5d8e6;">cowsay, fortune</span>');
+    printHtml('<span style="color:#8ab8d9;">📜 UTILS:</span> <span style="color:#c5d8e6;">clear, history</span>');
+  }
+
+  function listDir(arg) {
+    const target = arg ? resolvePath(currentPath, arg) : currentPath;
+    const node = getNode(target);
+    if (!node) { print(`ls: ${arg}: No such file`, 'error'); return; }
+    if (node.type !== 'dir') { print(`ls: ${target}: Not a directory`, 'error'); return; }
+    const items = node.children || [];
+    const html = items.map(c => {
+      const full = target === '~' ? `~/${c}` : `${target}/${c}`;
+      const n = getNode(full);
+      return n?.type === 'dir' ? `<span style="color:#8fcca8;">${c}/</span>` : `<span style="color:#c5d8e6;">${c}</span>`;
+    }).join('  ');
+    printHtml(html || '(empty)');
+  }
+  
+  function changeDir(arg) {
+    if (!arg || arg === '~') { currentPath = '~'; updatePrompt(); return; }
+    const newPath = resolvePath(currentPath, arg);
+    const node = getNode(newPath);
+    if (!node || node.type !== 'dir') { print(`cd: ${arg}: No such directory`, 'error'); return; }
+    currentPath = newPath; updatePrompt();
+  }
+  
+  function printWorkingDir() {
+    print(currentPath === '~' ? '/home/user' : currentPath.replace('~', '/home/user'), 'success');
+  }
+  
+  function viewFile(arg) {
+    if (!arg) { print('cat: missing file', 'error'); return; }
+    const fp = resolvePath(currentPath, arg);
+    const node = getNode(fp);
+    if (!node) { print(`cat: ${arg}: No such file`, 'error'); return; }
+    if (node.type !== 'file') { print(`cat: ${arg}: Is directory`, 'error'); return; }
+    print(node.content || '(empty)');
+  }
+  
+  function makeDir(arg) {
+    if (!arg) { print('mkdir: missing operand', 'error'); return; }
+    const fp = resolvePath(currentPath, arg);
+    if (getNode(fp)) { print(`mkdir: ${arg}: File exists`, 'error'); return; }
+    const parentPath = fp.substring(0, fp.lastIndexOf('/')) || '~';
+    const parent = getNode(parentPath);
+    if (!parent || parent.type !== 'dir') { print(`mkdir: ${arg}: No such directory`, 'error'); return; }
+    const name = fp.split('/').pop();
+    parent.children.push(name);
+    fs[fp] = { type: 'dir', children: [] };
+    saveFilesystem();
+    print(`mkdir: created directory '${arg}'`, 'success');
+    updateFileCount();
+  }
+  
+  function touchFile(arg) {
+    if (!arg) { print('touch: missing file', 'error'); return; }
+    const fp = resolvePath(currentPath, arg);
+    if (!getNode(fp)) {
+      const parentPath = fp.substring(0, fp.lastIndexOf('/')) || '~';
+      const parent = getNode(parentPath);
+      if (parent && parent.type === 'dir') {
+        parent.children.push(fp.split('/').pop());
+        fs[fp] = { type: 'file', content: '' };
+        saveFilesystem();
+      }
+    }
+    print(`touch: ${arg}`, 'success'); updateFileCount();
+  }
+  
+  function removeFile(args) {
+    if (!args.length) { print('rm: missing operand', 'error'); return; }
+    const recursive = args[0] === '-r' || args[0] === '-rf';
+    const targets = recursive ? args.slice(1) : args;
+    
+    targets.forEach(arg => {
+      const fp = resolvePath(currentPath, arg);
+      const node = getNode(fp);
+      if (!node) { print(`rm: ${arg}: No such file`, 'error'); return; }
+      if (node.type === 'dir' && !recursive) { print(`rm: ${arg}: Is a directory`, 'error'); return; }
+      
+      if (node.type === 'dir') {
+        Object.keys(fs).forEach(path => {
+          if (path.startsWith(fp + '/')) delete fs[path];
+        });
+      }
+      delete fs[fp];
+      const parentPath = fp.substring(0, fp.lastIndexOf('/')) || '~';
+      const parent = getNode(parentPath);
+      if (parent) parent.children = parent.children.filter(c => c !== fp.split('/').pop());
+      print(`rm: removed '${arg}'`, 'warning');
+    });
+    saveFilesystem();
+    updateFileCount();
+  }
+  
+  function copyFile(s,d) { 
+    if(!s||!d) { print('cp: missing operand','error'); return; }
+    print(`cp: '${s}' -> '${d}' (simulated)`, 'success'); 
+  }
+  
+  function moveFile(s,d) { 
+    if(!s||!d) { print('mv: missing operand','error'); return; }
+    print(`mv: '${s}' -> '${d}' (simulated)`, 'success'); 
+  }
+  
+  function showUptime() { 
+    const s=Math.floor((Date.now()-boot)/1000); 
+    print(`${Math.floor(s/3600)}:${String(Math.floor((s%3600)/60)).padStart(2,'0')} up ${Math.floor(s/86400)} days, 1 user, load average: ${randFloat(0,1.5,2)}`); 
+  }
+  
+  function showDf() { 
+    print('Filesystem     1K-blocks    Used Available Use% Mounted on');
+    print(`/dev/sda1       ${rand(40000000,60000000)} ${rand(20000000,40000000)} ${rand(20000000,40000000)} ${rand(30,70)}% /`); 
+  }
+  
+  function showFree() { 
+    print('              total        used        free      shared  buff/cache   available');
+    print(`Mem:       ${rand(6000000,16000000)}  ${rand(2000000,8000000)}   ${rand(2000000,8000000)}   ${rand(100000,500000)}   ${rand(1000000,3000000)}   ${rand(4000000,10000000)}`); 
+  }
+  
+  function showPs() { 
+    print('  PID TTY          TIME CMD');
+    print(`${rand(1000,9999)} pts/0    00:00:0${rand(1,9)} bash`);
+    print(`${rand(1000,9999)} pts/0    00:00:0${rand(1,9)} ps`); 
+  }
+
+  function ping(target) {
+    const data = getTargetData(`ping_${target}`, () => ({ ip: randomIP(), latency: rand(8, 50), loss: rand(0, 2) }));
+    print(`PING ${target} (${data.ip}) 56(84) bytes of data.`);
+    let seq = 1; const sent = 4;
+    const interval = setInterval(() => {
+      if (seq <= sent - data.loss) print(`64 bytes from ${data.ip}: icmp_seq=${seq} ttl=${rand(54,120)} time=${data.latency + rand(-2,2)} ms`);
+      if (++seq > sent) {
+        clearInterval(interval);
+        setTimeout(() => { print(`--- ${target} ping statistics ---\n${sent} packets transmitted, ${sent - data.loss} received, ${Math.round(data.loss*25)}% packet loss`); }, 200);
+      }
+    }, 300);
+  }
+
+  function nmap(target) {
+    const data = getTargetData(`nmap_${target}`, () => {
+      const ports = [];
+      if (Math.random() > 0.3) ports.push({p:22, s:'open', svc:'ssh'});
+      if (Math.random() > 0.4) ports.push({p:80, s:'open', svc:'http'});
+      if (Math.random() > 0.5) ports.push({p:443, s:'open', svc:'https'});
+      return { ip: randomIP(), ports };
+    });
+    print(`Starting Nmap scan for ${target} (${data.ip})`);
+    print('PORT     STATE    SERVICE');
+    data.ports.forEach(p => print(`${p.p}/tcp   ${p.s.padEnd(8)} ${p.svc}`));
+  }
+
+  function ssh(host) { 
+    const data = getTargetData(`ssh_${host}`, () => ({ ip: randomIP() })); 
+    print(`ssh: connecting to ${host}...`, 'info'); 
+    setTimeout(() => print(`Authenticated to ${host}`, 'success'), 300); 
+  }
+  
+  function wget(url) { 
+    const data = getTargetData(`wget_${url}`, () => ({ size: rand(1000, 999999), ip: randomIP() })); 
+    print(`wget: ${url} -> saved (${data.size} bytes)`, 'success'); 
+  }
+  
+  function curl(url) { 
+    const data = getTargetData(`curl_${url}`, () => ({ status: [200,301,404][rand(0,2)] })); 
+    print(`curl: HTTP/${data.status} <html>...`, data.status===200?'success':'warning'); 
+  }
+  
+  function grep(p,f) { 
+    if(!p||!f) return; 
+    const data = getTargetData(`grep_${f}_${p}`, () => ({ matches: rand(1, 15) })); 
+    print(`${f}:${data.matches} matches`, 'success'); 
+  }
+  
+  function wc(f) { 
+    if(!f) return; 
+    const data = getTargetData(`wc_${f}`, () => ({ lines: rand(10,500), words: rand(50,2000), chars: rand(500,10000) })); 
+    print(`${data.lines} ${data.words} ${data.chars} ${f}`, 'success'); 
+  }
+  
+  function head(f,n) { if(!f) return; print(`==> ${f} <==\nLine 1: sample content`); }
+  function tail(f,n) { if(!f) return; print(`==> ${f} <==\n...end of file`); }
+  function chmod(m,f) { if(!m||!f) return; print(`chmod: ${f} -> ${m}`, 'success'); }
+  function kill(p) { if(!p) return; print(`kill: sent SIGTERM to ${p}`, 'warning'); }
+  
+  function traceroute(target) { 
+    print(`traceroute to ${target}`); 
+    for(let i=1; i<=rand(8,15); i++) print(`${i}  ${rand(1,255)}.${rand(0,255)}.${rand(0,255)}.${rand(1,254)}  ${randFloat(1,30)} ms`); 
+  }
+  
+  function dig(domain) { 
+    const data = getTargetData(`dig_${domain}`, () => ({ ip: randomIP() })); 
+    print(`${domain}.  IN  A  ${data.ip}`); 
+  }
+
+  // ========== FULLY FUNCTIONAL DEV COMMANDS ==========
+  function git(args) {
+    const subcmd = args[0] || 'status';
+    
+    if (!devState.git) {
+      devState.git = {
+        branch: 'main',
+        branches: ['main', 'develop', 'feature/terminal'],
+        commits: [
+          { hash: 'a1b2c3d', message: 'Initial commit', author: 'dev', date: '2026-04-10' },
+          { hash: 'e4f5g6h', message: 'Add terminal features', author: 'dev', date: '2026-04-15' },
+          { hash: 'i7j8k9l', message: 'Fix filesystem bugs', author: 'dev', date: '2026-04-17' }
+        ],
+        staged: [],
+        modified: ['Terminal.html', 'README.md'].filter(() => Math.random() > 0.5)
+      };
+      saveStorage();
+    }
+    
+    const gitState = devState.git;
+    
+    if (subcmd === 'status') {
+      print(`On branch ${gitState.branch}`, 'info');
+      if (gitState.modified.length > 0) {
+        print('Changes not staged for commit:', 'warning');
+        gitState.modified.forEach(f => print(`  modified:   ${f}`, 'warning'));
+      } else {
+        print('nothing to commit, working tree clean', 'success');
+      }
+    } else if (subcmd === 'log') {
+      gitState.commits.forEach(c => {
+        print(`commit ${c.hash}`, 'success');
+        print(`Author: ${c.author} <${c.author}@a3terminal.local>`);
+        print(`Date:   ${c.date}`);
+        print(`    ${c.message}\n`);
+      });
+    } else if (subcmd === 'branch') {
+      gitState.branches.forEach(b => {
+        if (b === gitState.branch) print(`* ${b}`, 'success');
+        else print(`  ${b}`);
+      });
+    } else if (subcmd === 'add') {
+      const file = args[1];
+      if (file) {
+        if (!gitState.staged.includes(file)) gitState.staged.push(file);
+        print(`git add ${file}`, 'success');
+        saveStorage();
+      } else {
+        print('git add: missing file', 'error');
+      }
+    } else if (subcmd === 'commit') {
+      const msgIndex = args.indexOf('-m');
+      const msg = msgIndex !== -1 ? args[msgIndex + 1] : 'Update';
+      const newCommit = {
+        hash: Math.random().toString(36).substr(2, 7),
+        message: msg,
+        author: 'dev',
+        date: new Date().toISOString().split('T')[0]
+      };
+      gitState.commits.unshift(newCommit);
+      gitState.staged = [];
+      gitState.modified = [];
+      print(`[${gitState.branch} ${newCommit.hash}] ${msg}`, 'success');
+      print(` 1 file changed, ${rand(1,50)} insertions(+)`, 'success');
+      saveStorage();
+    } else if (subcmd === 'checkout') {
+      const target = args[1];
+      if (target && gitState.branches.includes(target)) {
+        gitState.branch = target;
+        print(`Switched to branch '${target}'`, 'success');
+        saveStorage();
+      } else if (target === '-b' && args[2]) {
+        gitState.branches.push(args[2]);
+        gitState.branch = args[2];
+        print(`Switched to a new branch '${args[2]}'`, 'success');
+        saveStorage();
+      } else {
+        print(`git checkout: '${target}' is not a branch`, 'error');
+      }
+    } else {
+      print(`git: '${subcmd}' is not a git command. See 'git --help'.`, 'error');
+    }
+  }
+
+  function python(args) {
+    const script = args[0];
+    if (script) {
+      print(`Python 3.${rand(8,12)}.${rand(0,9)} (simulated)`, 'info');
+      if (script.endsWith('.py')) {
+        print(`Executing ${script}...`, 'info');
+        setTimeout(() => {
+          print('Hello from Python!', 'success');
+          print(`Result: ${rand(1,100)}`, 'success');
+        }, 200);
+      } else {
+        print(`  File "<stdin>", line 1`, 'error');
+        print(`    ${args.join(' ')}`, 'error');
+        print('           ^', 'error');
+        print('SyntaxError: invalid syntax', 'error');
+      }
+    } else {
+      print(`Python 3.${rand(8,12)}.${rand(0,9)} (default, Apr 17 2026, 10:30:42)`, 'info');
+      print('[GCC 11.2.0] on linux', 'info');
+      print('Type "help", "copyright", "credits" or "license" for more information.', 'info');
+      print('>>> ', 'success');
+    }
+  }
+
+  function nodejs(args) {
+    const script = args[0];
+    if (script) {
+      print(`Node.js v${rand(16,20)}.${rand(0,18)}.${rand(0,9)} (simulated)`, 'info');
+      if (script.endsWith('.js')) {
+        print(`Executing ${script}...`, 'info');
+        setTimeout(() => {
+          print('Console output:', 'success');
+          print(`> Hello from Node.js!`, 'success');
+          print(`> Result: ${rand(1,100)}`, 'success');
+        }, 200);
+      } else if (script === '-e' || script === '--eval') {
+        const code = args[1] || 'console.log("Hello")';
+        print(`Evaluating: ${code}`, 'info');
+        print('Hello World', 'success');
+      } else {
+        print(`${script}: command not found`, 'error');
+      }
+    } else {
+      print('Welcome to Node.js v20.0.0.', 'info');
+      print('Type ".help" for more information.', 'info');
+      print('> ', 'success');
+    }
+  }
+
+  function npm(args) {
+    const subcmd = args[0] || 'help';
+    
+    if (!devState.npm) {
+      devState.npm = {
+        packages: {
+          'express': '4.18.2',
+          'react': '18.2.0',
+          'lodash': '4.17.21',
+          'axios': '1.4.0',
+          'typescript': '5.0.4'
+        },
+        installed: ['express', 'react', 'lodash']
+      };
+      saveStorage();
+    }
+    
+    const npmState = devState.npm;
+    
+    if (subcmd === 'install' || subcmd === 'i') {
+      const pkg = args[1];
+      if (pkg) {
+        if (!npmState.installed.includes(pkg)) {
+          npmState.installed.push(pkg);
+          npmState.packages[pkg] = `${rand(1,9)}.${rand(0,9)}.${rand(0,9)}`;
+        }
+        print(`npm install ${pkg}`, 'info');
+        setTimeout(() => {
+          print(`added ${rand(1,20)} packages in ${randFloat(1,5,1)}s`, 'success');
+          saveStorage();
+        }, 300);
+      } else {
+        print('npm install (all packages)', 'info');
+        setTimeout(() => {
+          print(`added ${rand(50,200)} packages in ${randFloat(2,8,1)}s`, 'success');
+        }, 500);
+      }
+    } else if (subcmd === 'list' || subcmd === 'ls') {
+      print('Installed packages:', 'info');
+      npmState.installed.forEach(p => {
+        print(`  ${p}@${npmState.packages[p] || '1.0.0'}`, 'success');
+      });
+    } else if (subcmd === 'outdated') {
+      print('Package     Current  Wanted  Latest', 'warning');
+      npmState.installed.forEach(p => {
+        const current = npmState.packages[p] || '1.0.0';
+        const latest = `${parseInt(current)+rand(0,2)}.${rand(0,9)}.${rand(0,9)}`;
+        print(`${p.padEnd(12)} ${current.padEnd(8)} ${current.padEnd(7)} ${latest}`, 'warning');
+      });
+    } else if (subcmd === 'run') {
+      const script = args[1];
+      print(`> npm run ${script}`, 'info');
+      print(`> Executing "${script}"...`, 'info');
+      setTimeout(() => print(`Build completed in ${randFloat(1,3,1)}s`, 'success'), 400);
+    } else if (subcmd === 'init') {
+      print('This utility will walk you through creating a package.json file.', 'info');
+      print('package name: (a3terminal)', 'info');
+      print('version: (1.0.0)', 'info');
+      print('description: A3 Terminal Project', 'info');
+      print('entry point: (index.js)', 'info');
+      print('test command:', 'info');
+      print('git repository:', 'info');
+      print('keywords:', 'info');
+      print('author: dev', 'info');
+      print('license: (ISC)', 'info');
+      print('About to write to ~/package.json:', 'warning');
+      print('{', 'success');
+      print('  "name": "a3terminal",', 'success');
+      print('  "version": "1.0.0",', 'success');
+      print('  "description": "A3 Terminal Project"', 'success');
+      print('}', 'success');
+      print('Is this OK? (yes)', 'info');
+    } else {
+      print(`npm ${subcmd} - command simulated`, 'info');
+    }
+  }
+
+  function docker(args) {
+    const subcmd = args[0] || 'help';
+    
+    if (!devState.docker) {
+      devState.docker = {
+        containers: [
+          { id: 'a1b2c3d4e5f6', image: 'nginx:latest', status: 'Up 2 hours', name: 'web-server' },
+          { id: 'f6e5d4c3b2a1', image: 'redis:alpine', status: 'Up 3 days', name: 'cache' },
+          { id: '1a2b3c4d5e6f', image: 'postgres:15', status: 'Exited (0) 5 hours ago', name: 'database' }
+        ],
+        images: [
+          { repository: 'nginx', tag: 'latest', size: '142MB' },
+          { repository: 'redis', tag: 'alpine', size: '32MB' },
+          { repository: 'postgres', tag: '15', size: '379MB' },
+          { repository: 'node', tag: '20-alpine', size: '178MB' }
+        ]
+      };
+      saveStorage();
+    }
+    
+    const dockerState = devState.docker;
+    
+    if (subcmd === 'ps') {
+      print('CONTAINER ID   IMAGE          STATUS              NAMES', 'info');
+      dockerState.containers
+        .filter(c => !args.includes('-a') ? c.status.includes('Up') : true)
+        .forEach(c => {
+          print(`${c.id.substring(0,12)}   ${c.image.padEnd(14)} ${c.status.padEnd(18)} ${c.name}`, c.status.includes('Up')?'success':'warning');
+        });
+    } else if (subcmd === 'images') {
+      print('REPOSITORY      TAG       SIZE', 'info');
+      dockerState.images.forEach(img => {
+        print(`${img.repository.padEnd(15)} ${img.tag.padEnd(9)} ${img.size}`, 'success');
+      });
+    } else if (subcmd === 'run') {
+      const img = args[args.length-1];
+      if (img) {
+        const containerId = Math.random().toString(36).substr(2, 12);
+        const newContainer = {
+          id: containerId,
+          image: img,
+          status: 'Up 1 second',
+          name: img.split(':')[0] + '-' + rand(1,99)
+        };
+        dockerState.containers.push(newContainer);
+        print(`Unable to find image '${img}' locally`, 'warning');
+        print(`${img}: Pulling from library/${img.split(':')[0]}`, 'info');
+        setTimeout(() => {
+          print(`Digest: sha256:${randomHash()}`, 'info');
+          print(`Status: Downloaded newer image for ${img}`, 'success');
+          print(`${containerId.substring(0,12)}`, 'success');
+          saveStorage();
+        }, 500);
+      } else {
+        print('docker run: missing image name', 'error');
+      }
+    } else if (subcmd === 'stop') {
+      const container = args[1];
+      if (container) {
+        const c = dockerState.containers.find(c => c.id.startsWith(container) || c.name === container);
+        if (c) {
+          c.status = 'Exited (0) 1 second ago';
+          print(container, 'success');
+          saveStorage();
+        } else {
+          print(`Error: No such container: ${container}`, 'error');
+        }
+      } else {
+        print('docker stop: missing container', 'error');
+      }
+    } else if (subcmd === 'rm') {
+      const container = args[1];
+      if (container) {
+        const idx = dockerState.containers.findIndex(c => c.id.startsWith(container) || c.name === container);
+        if (idx !== -1) {
+          dockerState.containers.splice(idx, 1);
+          print(container, 'success');
+          saveStorage();
+        } else {
+          print(`Error: No such container: ${container}`, 'error');
+        }
+      } else {
+        print('docker rm: missing container', 'error');
+      }
+    } else {
+      print(`docker ${subcmd} - command simulated`, 'info');
+    }
+  }
+
+  function systemctl(service, action='status') {
+    if (!service) {
+      print('systemctl: missing service name', 'error');
+      return;
+    }
+    
+    if (!devState.services) {
+      devState.services = {
+        'ssh': { status: 'active', enabled: true },
+        'nginx': { status: 'active', enabled: true },
+        'docker': { status: 'active', enabled: true },
+        'mysql': { status: 'inactive', enabled: false },
+        'postgresql': { status: 'failed', enabled: false }
+      };
+      saveStorage();
+    }
+    
+    const services = devState.services;
+    
+    if (!services[service]) {
+      services[service] = { status: 'inactive', enabled: false };
+    }
+    
+    const svc = services[service];
+    
+    if (action === 'status') {
+      if (svc.status === 'active') {
+        print(`● ${service}.service - ${service} daemon`, 'success');
+        print(`   Loaded: loaded (/lib/systemd/system/${service}.service; ${svc.enabled ? 'enabled' : 'disabled'})`, 'info');
+        print(`   Active: active (running) since ${new Date(Date.now()-rand(3600000,86400000)).toLocaleString()}`, 'success');
+        print(`   Main PID: ${rand(1000,9999)} (${service})`, 'info');
+        print(`   Tasks: ${rand(1,10)} (limit: 4915)`, 'info');
+        print(`   Memory: ${rand(10,500)}.${rand(0,9)}M`, 'info');
+        print(`   CGroup: /system.slice/${service}.service`, 'info');
+      } else if (svc.status === 'failed') {
+        print(`● ${service}.service - ${service} daemon`, 'error');
+        print(`   Loaded: loaded (/lib/systemd/system/${service}.service; ${svc.enabled ? 'enabled' : 'disabled'})`, 'info');
+        print(`   Active: failed (Result: exit-code)`, 'error');
+        print(`   Process: ${rand(1000,9999)} ExecStart=/usr/sbin/${service} (code=exited, status=1/FAILURE)`, 'error');
+      } else {
+        print(`● ${service}.service - ${service} daemon`, 'warning');
+        print(`   Loaded: loaded (/lib/systemd/system/${service}.service; ${svc.enabled ? 'enabled' : 'disabled'})`, 'info');
+        print(`   Active: inactive (dead)`, 'warning');
+      }
+    } else if (action === 'start') {
+      if (svc.status === 'active') {
+        print(`Warning: ${service}.service is already active`, 'warning');
+      } else {
+        svc.status = 'active';
+        print(`Starting ${service}.service...`, 'info');
+        setTimeout(() => {
+          print(`Started ${service}.service.`, 'success');
+          saveStorage();
+        }, 300);
+      }
+    } else if (action === 'stop') {
+      if (svc.status !== 'active') {
+        print(`Warning: ${service}.service is not active`, 'warning');
+      } else {
+        svc.status = 'inactive';
+        print(`Stopping ${service}.service...`, 'info');
+        setTimeout(() => {
+          print(`Stopped ${service}.service.`, 'success');
+          saveStorage();
+        }, 300);
+      }
+    } else if (action === 'restart') {
+      svc.status = 'inactive';
+      print(`Stopping ${service}.service...`, 'info');
+      setTimeout(() => {
+        print(`Stopped ${service}.service.`, 'success');
+        print(`Starting ${service}.service...`, 'info');
+        setTimeout(() => {
+          svc.status = 'active';
+          print(`Started ${service}.service.`, 'success');
+          saveStorage();
+        }, 300);
+      }, 300);
+    } else if (action === 'enable') {
+      svc.enabled = true;
+      print(`Created symlink /etc/systemd/system/multi-user.target.wants/${service}.service → /lib/systemd/system/${service}.service.`, 'success');
+      saveStorage();
+    } else if (action === 'disable') {
+      svc.enabled = false;
+      print(`Removed /etc/systemd/system/multi-user.target.wants/${service}.service.`, 'success');
+      saveStorage();
+    } else if (action === 'list-units') {
+      print('UNIT                      LOAD   ACTIVE SUB       DESCRIPTION', 'info');
+      Object.entries(services).forEach(([name, s]) => {
+        const status = s.status === 'active' ? 'active' : (s.status === 'failed' ? 'failed' : 'inactive');
+        print(`${name}.service              loaded ${status.padEnd(8)} running    ${name} daemon`, s.status==='active'?'success':(s.status==='failed'?'error':'warning'));
+      });
+    } else {
+      print(`Unknown operation ${action}.`, 'error');
+    }
+  }
+
+  function exploit(target) { 
+    const data = getTargetData(`exploit_${target}`, () => ({ success: Math.random()>0.3 })); 
+    setTimeout(() => print(data.success?'[+] EXPLOIT SUCCESSFUL!':'[!] Exploit failed', data.success?'success':'error'), 500); 
+  }
+  
+  function crack(hash) { 
+    const targetHash = hash || randomHash();
+    const data = getTargetData(`crack_${targetHash}`, () => ({ pass: randomPassword() })); 
+    setTimeout(() => print(`[+] Password: ${data.pass}`, 'success'), 600); 
+  }
+  
+  function hydra(target) { 
+    const data = getTargetData(`hydra_${target}`, () => ({ user: ['admin','root'][rand(0,1)], pass: randomPassword() })); 
+    setTimeout(() => print(`[+] ${data.user}:${data.pass}`, 'success'), 500); 
+  }
+  
+  function sqlmap(url) { 
+    const data = getTargetData(`sqlmap_${url}`, () => ({ vulnerable: Math.random()>0.4 })); 
+    setTimeout(() => print(data.vulnerable?'[+] Injectable!':'[!] Not vulnerable', data.vulnerable?'success':'error'), 600); 
+  }
+  
+  function john(file) { 
+    const data = getTargetData(`john_${file||'shadow'}`, () => ({ passwords: Array(rand(1,3)).fill(0).map(()=>randomPassword()) })); 
+    setTimeout(() => data.passwords.forEach(p=>print(`[+] ${p}`,'success')), 600); 
+  }
+  
+  function scanNetwork() { 
+    print('[SCAN] Scanning network...'); 
+    for(let i=0;i<rand(2,5);i++) print(`192.168.1.${rand(1,254)}  OPEN:22,80`); 
+  }
+  
+  function decrypt() { 
+    print(`[DECRYPT] Key: FLAG{${randomPassword()}}`, 'success'); 
+  }
+  
+  function metasploit() { 
+    print('[MSF] Session opened', 'success'); 
+  }
+  
+  function aircrack() { 
+    print(`[AIRCRACK] KEY: ${randomPassword()}`, 'success'); 
+  }
+  
+  function netstat() { 
+    print('tcp  0  0 192.168.1.10:22   ESTABLISHED'); 
+  }
+  
+  function ifconfig() { 
+    print(`eth0: inet ${randomIP()}`); 
+  }
+  
+  function cowsay(m) { 
+    const msg = m || 'Moo!'; 
+    print(` ${'_'.repeat(msg.length+2)}\n< ${msg} >\n ${'-'.repeat(msg.length+2)}\n        \\   ^__^\n         \\  (oo)\\_______`); 
+  }
+  
+  function fortune() { 
+    print(['You will succeed.','Code wins.','Stay curious.'][rand(0,2)], 'success'); 
+  }
+  
+  function showHistory() { 
+    history.forEach((c,i) => print(`${i+1}  ${c}`)); 
+  }
+
+  function handleGameInput(cmd, args) {
+    if (cmd === 'exit' || cmd === 'quit') {
+      if (activeGame === 'matrix' && matrixInterval) clearInterval(matrixInterval);
+      print(`Exited ${activeGame}`, 'warning'); activeGame = null; gameData = {}; matrixInterval = null; return;
+    }
+    if (activeGame === 'matrix') { 
+      if(cmd==='stop'){clearInterval(matrixInterval); activeGame=null; print('Matrix stopped.', 'success');} 
+      return; 
+    }
+    if (activeGame === 'wordle') {
+      const g = cmd.toLowerCase(); 
+      if(!/^[a-z]{5}$/.test(g)) { print('5 letters','error'); return; }
+      let res=''; const t=gameData.word;
+      for(let i=0;i<5;i++) res += g[i]===t[i]?'🟩':(t.includes(g[i])?'🟨':'⬛');
+      gameData.attempts++; 
+      print(`${g.toUpperCase()}  ${res}  (${gameData.attempts}/6)`, 'game');
+      if(g===t){ print('🎉 CORRECT! You win!','success'); activeGame=null; }
+      else if(gameData.attempts>=6){ print(`❌ Game over. Word: ${t.toUpperCase()}`,'error'); activeGame=null; }
+      return;
+    }
+    if (activeGame === 'guess') {
+      const n=parseInt(cmd); 
+      if(isNaN(n)){print('Enter a number','error');return;}
+      if(n===gameData.secret){ print(`🎯 Correct! ${n}`,'success'); activeGame=null; }
+      else {
+        const diff=Math.abs(n-gameData.secret);
+        let hint=n<gameData.secret?'Higher!':'Lower!';
+        if(diff>30) hint+=' (Very cold)';
+        else if(diff>15) hint+=' (Cold)';
+        else if(diff>5) hint+=' (Warm)';
+        else hint+=' (Hot!)';
+        print(hint,'warning');
+      }
+      return;
+    }
+    if (activeGame === 'hacknet') {
+      if(cmd==='scan') {
+        print(`╔══════════════════════════════╗\n║ NODE: ${gameData.node.padEnd(16)}║\n║ IP: ${gameData.ip.padEnd(18)}║\n║ FIREWALL: ${gameData.fw}/10${' '.repeat(8)}║\n╚══════════════════════════════╝`, 'hack');
+      } else if(cmd==='attack') {
+        if(gameData.fw<=0){ print('Already hacked!','warning'); return; }
+        gameData.fw=Math.max(0,gameData.fw-rand(1,2));
+        print(`[ATTACK] Firewall reduced to ${gameData.fw}/10`, gameData.fw===0?'success':'info');
+        if(gameData.fw===0){ print('💀 NODE HACKED! Root access obtained!','success'); activeGame=null; }
+      } else if(cmd==='exploit') {
+        if(gameData.fw<=0){ print('Already hacked!','warning'); return; }
+        if(Math.random()>0.3){ gameData.fw=0; print('[EXPLOIT] Success! Firewall bypassed!','success'); print('💀 NODE HACKED!','success'); activeGame=null; }
+        else print('[!] Exploit failed','error');
+      } else if(cmd==='status') print(`Firewall: ${gameData.fw}/10`, 'info');
+      else print('HACKNET: scan, attack, exploit, status, exit', 'warning');
+      return;
+    }
+  }
+
+  function startMatrix() {
+    activeGame='matrix'; 
+    print('🌧️ MATRIX MODE - Type "stop" to exit', 'matrix');
+    const chars="ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃ0123456789";
+    matrixInterval=setInterval(()=>{
+      if(activeGame!=='matrix'){clearInterval(matrixInterval);return;}
+      let l=''; 
+      for(let i=0;i<rand(30,60);i++) l+=chars[rand(0,chars.length-1)]+' ';
+      printHtml(`<span class="matrix">${l}</span>`);
+    },80);
+  }
+  
+  function startWordle() {
+    const words=['apple','brave','crane','delta','eagle','flame','grape','house','input','joker','knife','lemon','mango','nerve','ocean','piano','queen','rider','tiger','ultra','vivid','whale','xenon','yacht','zebra'];
+    gameData={word:words[rand(0,words.length-1)], attempts:0}; 
+    activeGame='wordle';
+    print('🎮 WORDLE: Guess 5-letter word (6 tries)', 'game');
+  }
+  
+  function startGuess() {
+    activeGame='guess'; 
+    gameData={secret:rand(1,100)};
+    print('🔢 GUESS NUMBER (1-100) with hints', 'game');
+  }
+  
+  function startHacknet() {
+    activeGame='hacknet';
+    gameData={ 
+      node:`GW-${rand(100,999)}-${String.fromCharCode(65+rand(0,25))}`, 
+      ip:`10.0.${rand(0,255)}.${rand(1,254)}`, 
+      fw:rand(4,8) 
+    };
+    print('🌐═══════════════════════════════', 'hack');
+    print(`   HACKNET - TARGET ACQUIRED`, 'game');
+    print(`   Node: ${gameData.node}`, 'info');
+    print(`   IP: ${gameData.ip}`, 'info');
+    print(`   Firewall: ${gameData.fw}/10`, 'warning');
+    print('Commands: scan, attack, exploit, status, exit', 'info');
+  }
+
+  function init() {
+    welcome(); 
+    updatePrompt();
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const val = input.value;
+        if (val.trim()) { 
+          history.push(val); 
+          historyIdx = history.length; 
+          execute(val); 
+        }
+        input.value = '';
+      } else if (e.key === 'ArrowUp') { 
+        e.preventDefault(); 
+        if(!history.length) return; 
+        historyIdx=Math.max(0,historyIdx-1); 
+        input.value=history[historyIdx]||''; 
+      } else if (e.key === 'ArrowDown') { 
+        e.preventDefault(); 
+        if(historyIdx<history.length-1){ 
+          historyIdx++; 
+          input.value=history[historyIdx]; 
+        } else { 
+          historyIdx=history.length; 
+          input.value=''; 
+        } 
+      }
+    });
+    document.querySelector('.terminal').addEventListener('click', ()=>input.focus());
+  }
+  
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notepad</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toolbar {
+      background: rgba(19, 19, 19, 0.9);
+      padding: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn {
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255,255,255,0.2);
+      box-shadow: 0 0 10px rgba(255,255,255,0.3);
+    }
+
+    select, input {
+      padding: 6px;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    #editor {
+      flex: 1;
+      background: #0a0a0a;
+      color: #0f0;
+      border: none;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+      scrollbar-width: thin;
+      scrollbar-color: #333 #111;
+    }
+
+    #editor::placeholder {
+      color: #666;
+    }
+
+    .status-bar {
+      background: rgba(19, 19, 19, 0.9);
+      padding: 8px 20px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .fullscreen .editor-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1000;
+    }
+
+    .fullscreen .toolbar, .fullscreen .status-bar {
+      display: none;
+    }
+
+    /* Line numbers removed per request */
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="btn" id="new">New</button>
+    <button class="btn" id="save">Save as TXT</button>
+    <button class="btn" id="clear">Clear</button>
+    <div style="display: flex; gap: 5px; align-items: center;">
+      <button class="btn" id="bold" title="Bold (Ctrl+B)">B</button>
+      <button class="btn" id="italic" title="Italic (Ctrl+I)">I</button>
+      <button class="btn" id="underline" title="Underline (Ctrl+U)">U</button>
+    </div>
+    <label>Font Size: <select id="fontSize">
+      <option value="12">12px</option>
+      <option value="14" selected>14px</option>
+      <option value="16">16px</option>
+      <option value="18">18px</option>
+      <option value="20">20px</option>
+    </select></label>
+    <label><input type="checkbox" id="lineNums"> Line #</label>
+    <button class="btn" id="fullscreen">Fullscreen</button>
+  </div>
+
+  <div class="editor-container">
+    <textarea id="editor" placeholder="Start typing your notes here...&#10;Supports bold, italic, underline (select text + buttons/hotkeys).&#10;Autosaves every 2 seconds to browser storage."></textarea>
+  </div>
+
+  <div class="status-bar">
+    <span id="wordCount">0 words | 0 chars</span>
+    <span id="autosave">Autosave enabled</span>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const wordCountEl = document.getElementById('wordCount');
+    let autosaveTimer;
+    let fileName = 'notepad.txt';
+
+    // Load from localStorage
+    const saved = localStorage.getItem(fileName);
+    if (saved) {
+      editor.value = saved;
+    }
+
+    // Autosave
+    function autosave() {
+      localStorage.setItem(fileName, editor.value);
+      document.getElementById('autosave').textContent = `Saved at ${new Date().toLocaleTimeString()}`;
+    }
+    autosaveTimer = setInterval(autosave, 2000);
+
+    // Update stats
+    function updateStats() {
+      const text = editor.value;
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      wordCountEl.textContent = `${words} words | ${chars} chars`;
+    }
+    editor.addEventListener('input', updateStats);
+    updateStats();
+
+    // Line numbers
+    function updateLineNumbers() {
+      if (!document.getElementById('lineNums').checked) {
+        lineNums.style.display = 'none';
+        return;
+      }
+      lineNums.style.display = 'block';
+      const lines = editor.value.split('\n').length;
+      lineNums.innerHTML = Array(lines).fill(0).map((_, i) => i + 1).join('\n');
+    }
+    document.getElementById('lineNums').addEventListener('change', updateLineNumbers);
+    editor.addEventListener('scroll', updateLineNumbers);
+    editor.addEventListener('input', updateLineNumbers);
+
+    // Toolbar actions
+    document.getElementById('new').onclick = () => { editor.value = ''; updateStats(); updateLineNumbers(); };
+    document.getElementById('clear').onclick = () => { editor.value = ''; updateStats(); updateLineNumbers(); };
+
+    document.getElementById('save').onclick = () => {
+      const blob = new Blob([editor.value], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `notepad-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // Format
+    function format(cmd) {
+      editor.focus();
+      document.execCommand(cmd, false, null);
+      editor.dispatchEvent(new Event('input'));
+    }
+    document.getElementById('bold').onclick = () => format('bold');
+    document.getElementById('italic').onclick = () => format('italic');
+    document.getElementById('underline').onclick = () => format('underline');
+
+    document.getElementById('fontSize').onchange = (e) => {
+      editor.style.fontSize = e.target.value + 'px';
+    };
+
+    document.getElementById('fullscreen').onclick = () => {
+      document.body.classList.toggle('fullscreen');
+    };
+
+    // Hotkeys
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey) {
+        switch(e.key.toLowerCase()) {
+          case 'b': e.preventDefault(); format('bold'); break;
+          case 'i': e.preventDefault(); format('italic'); break;
+          case 'u': e.preventDefault(); format('underline'); break;
+          case 's': e.preventDefault(); document.getElementById('save').click(); break;
+          case 'n': e.preventDefault(); document.getElementById('new').click(); break;
+        }
+      }
+    });
+
+    // Update on scroll for line nums
+    editor.addEventListener('scroll', () => {
+      lineNums.scrollTop = editor.scrollTop;
+    });
+  </script>
+</body>
+</html>
