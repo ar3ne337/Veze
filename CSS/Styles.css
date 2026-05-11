@@ -686,17 +686,25 @@
     text-align: center;
   }
   
+  /* Gallery mask now includes the corner marks */
   #vz-gallery-mask {
     position: absolute;
     width: calc(100% - 2vh);
     height: calc(100% - 2px);
     top: 1px;
     left: 1vh;
-    background-image: linear-gradient(to bottom,
-      var(--vz-accent-color),
-      transparent 2%,
-      transparent 98%,
-      var(--vz-accent-color));
+    background:
+      linear-gradient(to bottom, var(--vz-accent-color), transparent 2%, transparent 98%, var(--vz-accent-color)),
+      linear-gradient(to right, var(--vz-corner-color) 1px, transparent 1px) 0 0,
+      linear-gradient(to right, var(--vz-corner-color) 1px, transparent 1px) 0 100%,
+      linear-gradient(to left, var(--vz-corner-color) 1px, transparent 1px) 100% 0,
+      linear-gradient(to left, var(--vz-corner-color) 1px, transparent 1px) 100% 100%,
+      linear-gradient(to bottom, var(--vz-corner-color) 1px, transparent 1px) 0 0,
+      linear-gradient(to bottom, var(--vz-corner-color) 1px, transparent 1px) 100% 0,
+      linear-gradient(to top, var(--vz-corner-color) 1px, transparent 1px) 0 100%,
+      linear-gradient(to top, var(--vz-corner-color) 1px, transparent 1px) 100% 100%;
+    background-repeat: no-repeat;
+    background-size: 100% auto, 4px 4px, 4px 4px, 4px 4px, 4px 4px, 4px 4px, 4px 4px, 4px 4px, 4px 4px;
     pointer-events: none;
   }
   

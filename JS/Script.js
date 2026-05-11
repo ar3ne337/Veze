@@ -392,7 +392,7 @@ function renderPins() {
   PINS_TOP_ROW.innerHTML = '';
   PINS_BOTTOM_SCROLLER.innerHTML = '';
 
-  // Top row large images
+  // Top row large images – each wrapped in a .vz-outlined div with padding
   const bigImages = pinsData.big || [];
   bigImages.forEach((img, idx) => {
     const raw = typeof img === 'string' ? img : img.file;
@@ -401,10 +401,22 @@ function renderPins() {
     const format = isRemoteImage(raw) ? getImageFormat(raw) : raw.split('.').pop();
     const nameWithoutExt = isRemoteImage(raw) ? raw.substring(0, raw.lastIndexOf('.')) : raw.replace(/\.[^/.]+$/, '');
 
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.classList.add('vz-outlined');
+    wrapperDiv.style.display = 'flex';
+    wrapperDiv.style.flex = '1';
+    wrapperDiv.style.overflow = 'hidden';
+    wrapperDiv.style.padding = '4px';         // makes corner marks visible
+    wrapperDiv.style.boxSizing = 'border-box'; // include padding in flex calculations
+
     const imgEl = document.createElement('img');
     imgEl.src = fileName;
     imgEl.setAttribute('ar', aspectRatio);
     imgEl.style.animationDelay = `${idx * 0.1}s`;
+    imgEl.style.width = '100%';
+    imgEl.style.height = '100%';
+    imgEl.style.objectFit = 'cover';
+    imgEl.style.border = 'none';
     imgEl.addEventListener('mouseup', () => {
       openArtViewer(
         PINS_VIEWER,
@@ -417,10 +429,22 @@ function renderPins() {
       );
     });
     bindButton(imgEl, 'silence');
-    PINS_TOP_ROW.appendChild(imgEl);
+
+    wrapperDiv.appendChild(imgEl);
+    // Hover effect on wrapper
+    wrapperDiv.addEventListener('mouseenter', () => {
+      wrapperDiv.style.borderColor = 'white';
+      imgEl.style.filter = 'none';
+    });
+    wrapperDiv.addEventListener('mouseleave', () => {
+      wrapperDiv.style.borderColor = '';
+      imgEl.style.filter = '';
+    });
+
+    PINS_TOP_ROW.appendChild(wrapperDiv);
   });
 
-  // Bottom row small scrollable images
+  // Bottom row small scrollable images – each wrapped in a .vz-outlined div with padding
   const smallImages = pinsData.small || [];
   smallImages.forEach((img, idx) => {
     const raw = typeof img === 'string' ? img : img.file;
@@ -429,10 +453,26 @@ function renderPins() {
     const format = isRemoteImage(raw) ? getImageFormat(raw) : raw.split('.').pop();
     const nameWithoutExt = isRemoteImage(raw) ? raw.substring(0, raw.lastIndexOf('.')) : raw.replace(/\.[^/.]+$/, '');
 
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.classList.add('vz-outlined');
+    wrapperDiv.style.flexShrink = '0';
+    wrapperDiv.style.height = '95%';
+    wrapperDiv.style.aspectRatio = '9/16';
+    wrapperDiv.style.display = 'flex';
+    wrapperDiv.style.alignItems = 'center';
+    wrapperDiv.style.justifyContent = 'center';
+    wrapperDiv.style.overflow = 'hidden';
+    wrapperDiv.style.padding = '4px';         // makes corner marks visible
+    wrapperDiv.style.boxSizing = 'border-box'; // include padding in height/width
+
     const imgEl = document.createElement('img');
     imgEl.src = fileName;
     imgEl.setAttribute('ar', aspectRatio);
     imgEl.style.animationDelay = `${idx * 0.05}s`;
+    imgEl.style.width = '100%';
+    imgEl.style.height = '100%';
+    imgEl.style.objectFit = 'cover';
+    imgEl.style.border = 'none';
     imgEl.addEventListener('mouseup', () => {
       openArtViewer(
         PINS_VIEWER,
@@ -445,7 +485,19 @@ function renderPins() {
       );
     });
     bindButton(imgEl, 'silence');
-    PINS_BOTTOM_SCROLLER.appendChild(imgEl);
+
+    wrapperDiv.appendChild(imgEl);
+    // Hover effect on wrapper
+    wrapperDiv.addEventListener('mouseenter', () => {
+      wrapperDiv.style.borderColor = 'white';
+      imgEl.style.filter = 'none';
+    });
+    wrapperDiv.addEventListener('mouseleave', () => {
+      wrapperDiv.style.borderColor = '';
+      imgEl.style.filter = '';
+    });
+
+    PINS_BOTTOM_SCROLLER.appendChild(wrapperDiv);
   });
 
   pinsLoaded = true;
