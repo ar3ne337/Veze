@@ -1,11 +1,10 @@
 /**
  * Veze – Main Application Script
  * Fully fixed version with:
- * - PNG/JPG/JPEG/WEBP/GIF support
  * - Robust fallback for missing images
- * - Correct path handling: ignores JSON folder, always uses SOURCE/Image/Gallery/ or SOURCE/Image/Pins/
- * - Fixed viewer loading
- * - Fixed gallery stability
+ * - Correct path handling (ignores JSON folder, uses SOURCE/Image/Gallery/ or SOURCE/Image/Pins/)
+ * - Thumbnails display with their original aspect ratio (no forced cropping)
+ * - Fixed viewer loading & gallery stability
  */
 
 // ==============================
@@ -209,11 +208,8 @@ function getImageFormat(fileName) {
 /**
  * Strips all directory info from a path, returning only the filename.
  * Example: "img/art/Creator.webp" → "Creator.webp"
- *          "folder/sub/other.jpg" → "other.jpg"
- *          "simple.png"          → "simple.png"
  */
 function extractFilename(path) {
-  // Replace both / and \ with /
   const normalized = path.replace(/\\/g, "/");
   const parts = normalized.split("/");
   return parts[parts.length - 1];
@@ -304,10 +300,8 @@ function openArtViewer(
 
   // DETERMINE FULL PATH
   if (isRemoteImage(name)) {
-    // Absolute URL – use as‑is
     finalPath = name;
   } else {
-    // Local file – ignore any directory in 'name', keep only filename
     const rawFilename = extractFilename(name);
     const cleanName = rawFilename.replace(/\.[^/.]+$/, "");
     let folder = "SOURCE/Image/Gallery";
@@ -417,26 +411,29 @@ function createGalleryItem(pieceData) {
   const aspectRatio = pieceData[3] || "1";
   const rawPath = pieceData[5];
 
-  // Build the final image path – ignore directories, always go to SOURCE/Image/Gallery/
+  // Build final image path
   let imagePath;
   if (!rawPath) {
     imagePath = MISSING_IMAGE_PLACEHOLDER;
   } else if (isRemoteImage(rawPath)) {
-    imagePath = rawPath; // remote URL, keep as‑is
+    imagePath = rawPath;
   } else {
     const filename = extractFilename(rawPath);
     imagePath = `SOURCE/Image/Gallery/${filename}`;
   }
 
-  // Create thumbnail <img> element (much better than background-image)
+  // Create thumbnail <img> element with native aspect ratio
   const img = document.createElement("img");
   img.src = imagePath;
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.objectFit = "cover";
-  img.style.aspectRatio = aspectRatio;
   img.alt = displayName;
   img.draggable = false;
+
+  // Let the image keep its own proportions
+  img.style.width = "100%";
+  img.style.height = "auto";
+  img.style.display = "block";
+  // Fallback aspect ratio for layout before the image loads
+  img.style.aspectRatio = aspectRatio;
 
   // Fallback if image still fails to load
   img.onerror = function () {
@@ -446,6 +443,7 @@ function createGalleryItem(pieceData) {
     }
   };
 
+  // Clear container and insert image
   thumbnail.innerHTML = "";
   thumbnail.appendChild(img);
 
@@ -457,7 +455,7 @@ function createGalleryItem(pieceData) {
       GALLERY_VIEWER,
       GALLERY_IMAGE,
       GALLERY_TITLE,
-      imagePath,            // already a full local or remote path
+      imagePath,
       getImageFormat(imagePath),
       aspectRatio,
       displayName
@@ -560,6 +558,9 @@ function renderPins() {
     imgEl.src = `SOURCE/Image/Pins/${raw}`;
     imgEl.setAttribute("ar", aspectRatio);
     imgEl.draggable = false;
+    imgEl.style.width = "100%";
+    imgEl.style.height = "auto";
+    imgEl.style.aspectRatio = aspectRatio;
 
     imgEl.onerror = function () {
       if (this.src !== MISSING_IMAGE_PLACEHOLDER) {
@@ -595,6 +596,9 @@ function renderPins() {
     imgEl.src = `SOURCE/Image/Pins/${raw}`;
     imgEl.setAttribute("ar", aspectRatio);
     imgEl.draggable = false;
+    imgEl.style.width = "100%";
+    imgEl.style.height = "auto";
+    imgEl.style.aspectRatio = aspectRatio;
 
     imgEl.onerror = function () {
       if (this.src !== MISSING_IMAGE_PLACEHOLDER) {
