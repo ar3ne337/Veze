@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- Import Google Fonts from CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
 
     <style>
@@ -39,7 +41,9 @@
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
+            width: 100dvw;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -72,6 +76,11 @@
             left: 0;
             padding: 0 28px;
             z-index: 5;
+            pointer-events: none;
+        }
+
+        .player-header>* {
+            pointer-events: auto;
         }
 
         .now-playing-label {
@@ -149,7 +158,14 @@
             height: 100%;
             object-fit: cover;
             display: block;
-            transition: opacity 0.3s ease;
+            position: relative;
+            z-index: 2;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .album-art-container.image-loaded .album-art-image {
+            opacity: 1;
         }
 
         .album-art-fallback {
@@ -174,11 +190,6 @@
 
         .album-art-container.playing .album-art-fallback i {
             color: rgba(168, 85, 247, 0.3);
-        }
-
-        /* Hide fallback when image is loaded */
-        .album-art-container.image-loaded .album-art-fallback {
-            opacity: 0;
         }
 
         /* ============ SONG INFO ============ */
@@ -229,13 +240,15 @@
             cursor: pointer;
             overflow: visible;
             transition: height 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .progress-container:hover {
             height: 8px;
         }
 
-        .progress-container:active {
+        .progress-container:active,
+        .progress-container.dragging {
             height: 8px;
         }
 
@@ -254,7 +267,7 @@
                     #3b82f6);
             background-size: 200% 100%;
             animation: gradientShift 3s ease infinite;
-            transition: width 0.1s linear;
+            transition: width 0.05s linear;
             pointer-events: none;
             z-index: 1;
             box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
@@ -283,7 +296,7 @@
             z-index: 3;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s ease, left 0.1s linear;
+            transition: opacity 0.2s ease, left 0.05s linear;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(168, 85, 247, 0.5);
         }
 
@@ -335,6 +348,8 @@
             border-radius: 50%;
             transition: all 0.2s ease;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .ctrl-btn:hover {
@@ -345,6 +360,11 @@
         .ctrl-btn:active {
             transform: scale(0.88);
             transition: all 0.1s ease;
+        }
+
+        .ctrl-btn:focus-visible {
+            outline: 2px solid rgba(168, 85, 247, 0.6);
+            outline-offset: 3px;
         }
 
         /* Previous & Next */
@@ -390,6 +410,7 @@
             height: 48px;
             font-size: 1.1rem;
             background: rgba(255, 255, 255, 0.04);
+            position: relative;
         }
 
         .btn-repeat:hover {
@@ -465,6 +486,7 @@
             width: 85%;
             max-width: 420px;
             height: 100%;
+            height: 100dvh;
             background: #0a0a0a;
             z-index: 60;
             display: flex;
@@ -507,10 +529,17 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .playlist-close-btn:hover {
             background: rgba(255, 255, 255, 0.08);
+        }
+
+        .playlist-close-btn:focus-visible {
+            outline: 2px solid rgba(168, 85, 247, 0.6);
+            outline-offset: 2px;
         }
 
         .playlist-count {
@@ -527,6 +556,7 @@
             list-style: none;
             scrollbar-width: thin;
             scrollbar-color: #333 transparent;
+            -webkit-overflow-scrolling: touch;
         }
 
         .playlist-list::-webkit-scrollbar {
@@ -552,10 +582,15 @@
             transition: all 0.2s ease;
             margin-bottom: 4px;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .playlist-item:hover {
             background: rgba(255, 255, 255, 0.04);
+        }
+
+        .playlist-item:active {
+            background: rgba(255, 255, 255, 0.07);
         }
 
         .playlist-item.active {
@@ -611,6 +646,7 @@
             color: #a855f7;
             display: none;
             animation: pulseDot 1s ease-in-out infinite;
+            flex-shrink: 0;
         }
 
         .playlist-item.active .playlist-item-playing-icon {
@@ -703,6 +739,25 @@
                 font-size: 50px;
             }
         }
+
+        @media (min-width: 768px) {
+            .album-art-container {
+                width: 300px;
+                height: 300px;
+            }
+
+            .song-title {
+                font-size: 1.6rem;
+            }
+
+            .song-artist {
+                font-size: 1rem;
+            }
+
+            .album-art-fallback i {
+                font-size: 80px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -719,7 +774,7 @@
 
         <!-- Album Art Square -->
         <div class="album-art-container" id="albumArtContainer">
-            <img class="album-art-image" id="albumArtImage" src="" alt="Album Art" style="display: none;">
+            <img class="album-art-image" id="albumArtImage" src="" alt="Album Art">
             <div class="album-art-fallback" id="albumArtFallback">
                 <i class="fa-solid fa-music"></i>
             </div>
@@ -743,7 +798,7 @@
             </div>
         </div>
 
-        <!-- Controls (Shuffle on left) -->
+        <!-- Controls (Shuffle on left, Repeat on right) -->
         <div class="controls">
             <!-- Shuffle (left side) -->
             <button class="ctrl-btn btn-shuffle" id="btnShuffle" title="Shuffle: Off" aria-label="Shuffle mode">
@@ -780,7 +835,7 @@
         <div class="playlist-header">
             <div>
                 <span class="playlist-title">Playlist</span>
-                <span class="playlist-count" id="playlistCount">5 tracks</span>
+                <span class="playlist-count" id="playlistCount">63 tracks</span>
             </div>
             <button class="playlist-close-btn" id="playlistCloseBtn" aria-label="Close playlist">
                 <i class="fa-solid fa-xmark"></i>
@@ -798,7 +853,6 @@
         (function() {
             // ==================== DOM ELEMENTS ====================
             const audio = document.getElementById('audioElement');
-            const musicPlayer = document.getElementById('musicPlayer');
             const albumArtContainer = document.getElementById('albumArtContainer');
             const albumArtImage = document.getElementById('albumArtImage');
             const albumArtFallback = document.getElementById('albumArtFallback');
@@ -824,447 +878,172 @@
 
             // ==================== PLAYLIST DATA ====================
             const playlist = [
-                {
-                    id: 0,
-                    title: '10_35 - Tiësto',
-                    artist: 'Tiësto',
-                    url: 'SOURCE/Music/Songs/10_35 - Tiësto.mp3',
-                    image: 'SOURCE/Music/Covers/10_35.jpg'
-                },
-                {
-                    id: 1,
-                    title: 'Deal Or No Deal',
-                    artist: 'Mabel & J1',
+                { id: 0, title: '10_35 - Tiësto', artist: 'Tiësto',
+                    url: 'SOURCE/Music/Songs/10_35 - Tiësto.mp3', image: 'SOURCE/Music/Covers/10_35.jpg' },
+                { id: 1, title: 'Deal Or No Deal', artist: 'Mabel & J1',
                     url: 'SOURCE/Music/Songs/A1 x J1, Mabel - Deal Or No Deal.wav',
-                    image: 'SOURCE/Music/Covers/DealOrNoDeal.jpg'
-                },
-                {
-                    id: 2,
-                    title: 'Bad Girl',
-                    artist: 'Daya',
-                    url: 'SOURCE/Music/Songs/Bad Girl - Daya.mp3',
-                    image: 'SOURCE/Music/Covers/BadGirl.jpg'
-                },
-                {
-                    id: 3,
-                    title: 'Just Wanna Be Friends',
-                    artist: 'Basixx',
+                    image: 'SOURCE/Music/Covers/DealOrNoDeal.jpg' },
+                { id: 2, title: 'Bad Girl', artist: 'Daya', url: 'SOURCE/Music/Songs/Bad Girl - Daya.mp3',
+                    image: 'SOURCE/Music/Covers/BadGirl.jpg' },
+                { id: 3, title: 'Just Wanna Be Friends', artist: 'Basixx',
                     url: 'SOURCE/Music/Songs/Basixx - Just Wanna Be Friends.wav',
-                    image: 'SOURCE/Music/Covers/JustWannaBeFriends.jpg'
-                },
-                {
-                    id: 4,
-                    title: 'Beautiful Mistakes',
-                    artist: 'Maroon 5',
+                    image: 'SOURCE/Music/Covers/JustWannaBeFriends.jpg' },
+                { id: 4, title: 'Beautiful Mistakes', artist: 'Maroon 5',
                     url: 'SOURCE/Music/Songs/Beautiful Mistakes - Maroon 5.mp3',
-                    image: 'SOURCE/Music/Covers/Beautiful Mistakes.jpg'
-                },
-                {
-                    id: 5,
-                    title: 'Half a Heart',
-                    artist: 'BEAUZ / GISHIN',
+                    image: 'SOURCE/Music/Covers/Beautiful Mistakes.jpg' },
+                { id: 5, title: 'Half a Heart', artist: 'BEAUZ / GISHIN',
                     url: 'SOURCE/Music/Songs/BEAUZ, GISHIN, AmanderSings - Half a Heart.wav',
-                    image: 'SOURCE/Music/Covers/HalfAHeart.jpg'
-                },
-                {
-                    id: 6,
-                    title: 'Girl in the Mirror',
-                    artist: 'Bebe Rexha',
+                    image: 'SOURCE/Music/Covers/HalfAHeart.jpg' },
+                { id: 6, title: 'Girl in the Mirror', artist: 'Bebe Rexha',
                     url: 'SOURCE/Music/Songs/Bebe Rexha - Girl in the Mirror.wav',
-                    image: 'SOURCE/Music/Covers/GirlintheMirror.jpg'
-                },
-                {
-                    id: 7,
-                    title: 'Self Control',
-                    artist: 'Bebe Rexha',
+                    image: 'SOURCE/Music/Covers/GirlintheMirror.jpg' },
+                { id: 7, title: 'Self Control', artist: 'Bebe Rexha',
                     url: 'SOURCE/Music/Songs/Bebe Rexha - Self Control.wav',
-                    image: 'SOURCE/Music/Covers/SelfControl.jpg'
-                },
-                {
-                    id: 8,
-                    title: 'Believers',
-                    artist: 'Alan Walker',
-                    url: 'SOURCE/Music/Songs/Believers - Alan Walker.mp3',
-                    image: 'SOURCE/Music/Covers/Believers.jpg'
-                },
-                {
-                    id: 9,
-                    title: 'Chai and Sunshine',
-                    artist: 'Anjulie',
+                    image: 'SOURCE/Music/Covers/SelfControl.jpg' },
+                { id: 8, title: 'Believers', artist: 'Alan Walker',
+                    url: 'SOURCE/Music/Songs/Believers - Alan Walker.mp3', image: 'SOURCE/Music/Covers/Believers.jpg' },
+                { id: 9, title: 'Chai and Sunshine', artist: 'Anjulie',
                     url: 'SOURCE/Music/Songs/Chai and Sunshine - Anjulie.mp3',
-                    image: 'SOURCE/Music/Covers/Chai and Sunshine.jpg'
-                },
-                {
-                    id: 10,
-                    title: 'Cheap Thrills',
-                    artist: 'Sia',
-                    url: 'SOURCE/Music/Songs/Cheap Thrills - Sia.mp3',
-                    image: 'SOURCE/Music/Covers/Cheap Thrills.jpg'
-                },
-                {
-                    id: 11,
-                    title: 'Believing In Us',
-                    artist: 'Oaks',
+                    image: 'SOURCE/Music/Covers/Chai and Sunshine.jpg' },
+                { id: 10, title: 'Cheap Thrills', artist: 'Sia', url: 'SOURCE/Music/Songs/Cheap Thrills - Sia.mp3',
+                    image: 'SOURCE/Music/Covers/Cheap Thrills.jpg' },
+                { id: 11, title: 'Believing In Us', artist: 'Oaks',
                     url: 'SOURCE/Music/Songs/Cheat Codes, Oaks - Believing In Us.wav',
-                    image: 'SOURCE/Music/Covers/BelievingInUs.jpg'
-                },
-                {
-                    id: 12,
-                    title: 'Mama',
-                    artist: 'Clean Bandit',
+                    image: 'SOURCE/Music/Covers/BelievingInUs.jpg' },
+                { id: 12, title: 'Mama', artist: 'Clean Bandit',
                     url: 'SOURCE/Music/Songs/Clean Bandit, Ellie Goulding - Mama (feat. Ellie Goulding).wav',
-                    image: 'SOURCE/Music/Covers/Mama.jpg'
-                },
-                {
-                    id: 13,
-                    title: 'Bad Girl',
-                    artist: 'Various',
+                    image: 'SOURCE/Music/Covers/Mama.jpg' },
+                { id: 13, title: 'Bad Girl (Alt)', artist: 'Daya & Various',
                     url: 'SOURCE/Music/Songs/Daya, Andrew Goldstein, Jacob Kasher Hindlin, Madison Love, Grace Tandon, Michael Pollack, Charlie Puth - Bad Girl.wav',
-                    image: 'SOURCE/Music/Covers/BadGirl.jpg'
-                },
-                {
-                    id: 14,
-                    title: 'Déjà Vu',
-                    artist: 'Yves V',
-                    url: 'SOURCE/Music/Songs/Déjà Vu - Yves V.mp3',
-                    image: 'SOURCE/Music/Covers/Déjà Vu.jpg'
-                },
-                {
-                    id: 15,
-                    title: 'Complicated',
-                    artist: 'Dimitri Vegas & Like Mike',
+                    image: 'SOURCE/Music/Covers/BadGirl.jpg' },
+                { id: 14, title: 'Déjà Vu', artist: 'Yves V', url: 'SOURCE/Music/Songs/Déjà Vu - Yves V.mp3',
+                    image: 'SOURCE/Music/Covers/Déjà Vu.jpg' },
+                { id: 15, title: 'Complicated', artist: 'Dimitri Vegas & Like Mike',
                     url: 'SOURCE/Music/Songs/Dimitri Vegas & Like Mike, David Guetta, Dimitri Vegas, Kiiara - Complicated.wav',
-                    image: 'SOURCE/Music/Covers/Complicated.jpg'
-                },
-                {
-                    id: 16,
-                    title: 'Runaway Kids',
-                    artist: 'Dreamr.',
+                    image: 'SOURCE/Music/Covers/Complicated.jpg' },
+                { id: 16, title: 'Runaway Kids', artist: 'Dreamr.',
                     url: 'SOURCE/Music/Songs/Dreamr., Catchphrase, Prince Woods, Kyra Grove - Runaway Kids.wav',
-                    image: 'SOURCE/Music/Covers/RunawayKids.jpg'
-                },
-                {
-                    id: 17,
-                    title: 'Burn',
-                    artist: 'Ellie Goulding',
-                    url: 'SOURCE/Music/Songs/Ellie Goulding - Burn.wav',
-                    image: 'SOURCE/Music/Covers/Burn.jpg'
-                },
-                {
-                    id: 18,
-                    title: 'Flashbacks',
-                    artist: 'INNA',
-                    url: 'SOURCE/Music/Songs/Flashbacks - INNA.mp3',
-                    image: 'SOURCE/Music/Covers/Flashbacks.jpg'
-                },
-                {
-                    id: 19,
-                    title: 'Flicker Thicker Flames',
-                    artist: 'Lvly',
+                    image: 'SOURCE/Music/Covers/RunawayKids.jpg' },
+                { id: 17, title: 'Burn', artist: 'Ellie Goulding', url: 'SOURCE/Music/Songs/Ellie Goulding - Burn.wav',
+                    image: 'SOURCE/Music/Covers/Burn.jpg' },
+                { id: 18, title: 'Flashbacks', artist: 'INNA', url: 'SOURCE/Music/Songs/Flashbacks - INNA.mp3',
+                    image: 'SOURCE/Music/Covers/Flashbacks.jpg' },
+                { id: 19, title: 'Flicker Thicker Flames', artist: 'Lvly',
                     url: 'SOURCE/Music/Songs/Flicker Thicker Flames - Lvly.mp3',
-                    image: 'SOURCE/Music/Covers/Flicker Thicker Flames.jpg'
-                },
-                {
-                    id: 20,
-                    title: 'Body Back',
-                    artist: 'Gryffin & Maia Wright',
+                    image: 'SOURCE/Music/Covers/Flicker Thicker Flames.jpg' },
+                { id: 20, title: 'Body Back', artist: 'Gryffin & Maia Wright',
                     url: 'SOURCE/Music/Songs/Gryffin, Maia Wright - Body Back.wav',
-                    image: 'SOURCE/Music/Covers/BodyBlack.jpg'
-                },
-                {
-                    id: 21,
-                    title: 'Love Myself',
-                    artist: 'Hailee Steinfeld',
+                    image: 'SOURCE/Music/Covers/BodyBlack.jpg' },
+                { id: 21, title: 'Love Myself', artist: 'Hailee Steinfeld',
                     url: 'SOURCE/Music/Songs/Hailee Steinfeld - Love Myself (Official Video).wav',
-                    image: 'SOURCE/Music/Covers/LoveMyself.jpg'
-                },
-                {
-                    id: 22,
-                    title: 'Heartbreak Anthem',
-                    artist: 'Galantis',
+                    image: 'SOURCE/Music/Covers/LoveMyself.jpg' },
+                { id: 22, title: 'Heartbreak Anthem', artist: 'Galantis',
                     url: 'SOURCE/Music/Songs/Heartbreak Anthem - Galantis.mp3',
-                    image: 'SOURCE/Music/Covers/Heartbreak Anthem.jpg'
-                },
-                {
-                    id: 23,
-                    title: 'Here With Me',
-                    artist: 'Marshmello',
+                    image: 'SOURCE/Music/Covers/Heartbreak Anthem.jpg' },
+                { id: 23, title: 'Here With Me', artist: 'Marshmello',
                     url: 'SOURCE/Music/Songs/Here With Me - Marshmello.mp3',
-                    image: 'SOURCE/Music/Covers/Here With Me.jpg'
-                },
-                {
-                    id: 24,
-                    title: 'Hope',
-                    artist: 'The Chainsmokers',
-                    url: 'SOURCE/Music/Songs/Hope - The Chainsmokers.mp3',
-                    image: 'SOURCE/Music/Covers/Hope.jpg'
-                },
-                {
-                    id: 25,
-                    title: 'Dive',
-                    artist: 'Hot Shade',
+                    image: 'SOURCE/Music/Covers/Here With Me.jpg' },
+                { id: 24, title: 'Hope', artist: 'The Chainsmokers',
+                    url: 'SOURCE/Music/Songs/Hope - The Chainsmokers.mp3', image: 'SOURCE/Music/Covers/Hope.jpg' },
+                { id: 25, title: 'Dive', artist: 'Hot Shade',
                     url: 'SOURCE/Music/Songs/Hot Shade, Mike Perry, Chris James - Dive.wav',
-                    image: 'SOURCE/Music/Covers/Dive.jpg'
-                },
-                {
-                    id: 26,
-                    title: 'PAY ME BACK!',
-                    artist: 'ILIRA',
-                    url: 'SOURCE/Music/Songs/ILIRA - PAY ME BACK!.wav',
-                    image: 'SOURCE/Music/Covers/PayMeBack.jpg'
-                },
-                {
-                    id: 27,
-                    title: "Look Who's Cryin' Now",
-                    artist: 'Jessie Murph',
+                    image: 'SOURCE/Music/Covers/Dive.jpg' },
+                { id: 26, title: 'PAY ME BACK!', artist: 'ILIRA',
+                    url: 'SOURCE/Music/Songs/ILIRA - PAY ME BACK!.wav', image: 'SOURCE/Music/Covers/PayMeBack.jpg' },
+                { id: 27, title: "Look Who's Cryin' Now", artist: 'Jessie Murph',
                     url: "SOURCE/Music/Songs/Jessie Murph - Look Who's Cryin' Now.wav",
-                    image: "SOURCE/Music/Covers/LookWhosCryinNow.jpg"
-                },
-                {
-                    id: 28,
-                    title: 'Wild',
-                    artist: 'Jonas Blue',
+                    image: "SOURCE/Music/Covers/LookWhosCryinNow.jpg" },
+                { id: 28, title: 'Wild', artist: 'Jonas Blue',
                     url: 'SOURCE/Music/Songs/Jonas Blue, Chelcee Grimes, TINI, JHAYCO - Wild.wav',
-                    image: 'SOURCE/Music/Covers/Wild.jpg'
-                },
-                {
-                    id: 29,
-                    title: 'Polaroid',
-                    artist: 'Jonas Blue',
+                    image: 'SOURCE/Music/Covers/Wild.jpg' },
+                { id: 29, title: 'Polaroid', artist: 'Jonas Blue',
                     url: 'SOURCE/Music/Songs/Jonas Blue, Liam Payne, Lennon Stella - Polaroid.wav',
-                    image: 'SOURCE/Music/Covers/Polaroid.jpg'
-                },
-                {
-                    id: 30,
-                    title: 'Mona Lisa',
-                    artist: 'K-391',
-                    url: 'SOURCE/Music/Songs/K-391 - Mona Lisa.wav',
-                    image: 'SOURCE/Music/Covers/MonaLisa.jpg'
-                },
-                {
-                    id: 31,
-                    title: 'la di die',
-                    artist: 'Nessa Barrett',
-                    url: 'SOURCE/Music/Songs/la di die - Nessa Barrett.mp3',
-                    image: 'SOURCE/Music/Covers/la di die.jpg'
-                },
-                {
-                    id: 32,
-                    title: 'I Like Me Better',
-                    artist: 'Lauv',
+                    image: 'SOURCE/Music/Covers/Polaroid.jpg' },
+                { id: 30, title: 'Mona Lisa', artist: 'K-391', url: 'SOURCE/Music/Songs/K-391 - Mona Lisa.wav',
+                    image: 'SOURCE/Music/Covers/MonaLisa.jpg' },
+                { id: 31, title: 'la di die', artist: 'Nessa Barrett',
+                    url: 'SOURCE/Music/Songs/la di die - Nessa Barrett.mp3', image: 'SOURCE/Music/Covers/la di die.jpg' },
+                { id: 32, title: 'I Like Me Better', artist: 'Lauv',
                     url: 'SOURCE/Music/Songs/Lauv - I Like Me Better.wav',
-                    image: 'SOURCE/Music/Covers/ILikeMeBetter.jpg'
-                },
-                {
-                    id: 33,
-                    title: 'Let Me Go',
-                    artist: 'Hailee Steinfeld',
+                    image: 'SOURCE/Music/Covers/ILikeMeBetter.jpg' },
+                { id: 33, title: 'Let Me Go', artist: 'Hailee Steinfeld',
                     url: 'SOURCE/Music/Songs/Let Me Go  - Hailee Steinfeld.mp3',
-                    image: 'SOURCE/Music/Covers/Let Me Go.jpg'
-                },
-                {
-                    id: 34,
-                    title: 'Lonely Together',
-                    artist: 'Avicii',
+                    image: 'SOURCE/Music/Covers/Let Me Go.jpg' },
+                { id: 34, title: 'Lonely Together', artist: 'Avicii',
                     url: 'SOURCE/Music/Songs/Lonely Together - Avicii.mp3',
-                    image: 'SOURCE/Music/Covers/Lonely Together.jpg'
-                },
-                {
-                    id: 35,
-                    title: 'Catching Fire',
-                    artist: 'Lvly & Dai',
+                    image: 'SOURCE/Music/Covers/Lonely Together.jpg' },
+                { id: 35, title: 'Catching Fire', artist: 'Lvly & Dai',
                     url: 'SOURCE/Music/Songs/Lvly, Dai - Catching Fire.wav',
-                    image: 'SOURCE/Music/Covers/CatchingFire.jpg'
-                },
-                {
-                    id: 36,
-                    title: "Don't Call Me Up",
-                    artist: 'Mabel',
-                    url: 'SOURCE/Music/Songs/Mabel - Don\'t Call Me Up.wav',
-                    image: 'SOURCE/Music/Covers/DontCallMeUp.jpg'
-                },
-                {
-                    id: 37,
-                    title: 'Here With Me',
-                    artist: 'Marshmello & CHVRCHES',
+                    image: 'SOURCE/Music/Covers/CatchingFire.jpg' },
+                { id: 36, title: "Don't Call Me Up", artist: 'Mabel',
+                    url: "SOURCE/Music/Songs/Mabel - Don't Call Me Up.wav",
+                    image: 'SOURCE/Music/Covers/DontCallMeUp.jpg' },
+                { id: 37, title: 'Here With Me (Alt)', artist: 'Marshmello & CHVRCHES',
                     url: 'SOURCE/Music/Songs/Marshmello, CHVRCHES - Here With Me.wav',
-                    image: 'SOURCE/Music/Covers/HereWithMe.jpg'
-                },
-                {
-                    id: 38,
-                    title: 'New',
-                    artist: 'Daya',
-                    url: 'SOURCE/Music/Songs/New - Daya.mp3',
-                    image: 'SOURCE/Music/Covers/New.jpg'
-                },
-                {
-                    id: 39,
-                    title: 'AM_PM',
-                    artist: 'NOTD & Maia Wright',
-                    url: 'SOURCE/Music/Songs/NOTD, Maia Wright - AM_PM.wav',
-                    image: 'SOURCE/Music/Covers/AM_PM.jpg'
-                },
-                {
-                    id: 40,
-                    title: 'k (all i got to say)',
-                    artist: 'NUVILICES',
-                    url: 'SOURCE/Music/Songs/NUVILICES - k (all i got to say).wav',
-                    image: 'SOURCE/Music/Covers/k.jpg'
-                },
-                {
-                    id: 41,
-                    title: 'Munn',
-                    artist: 'Religion_s Epitome',
-                    url: 'SOURCE/Music/Songs/Religion_s Epitome - Munn.mp3',
-                    image: 'SOURCE/Music/Covers/Religion_s Epitome.jpg'
-                },
-                {
-                    id: 42,
-                    title: 'Rich Love',
-                    artist: 'OneRepublic',
-                    url: 'SOURCE/Music/Songs/Rich Love - OneRepublic.mp3',
-                    image: 'SOURCE/Music/Covers/Rich Love.jpg'
-                },
-                {
-                    id: 43,
-                    title: 'Riding Shotgun',
-                    artist: 'Kygo',
+                    image: 'SOURCE/Music/Covers/HereWithMe.jpg' },
+                { id: 38, title: 'New', artist: 'Daya', url: 'SOURCE/Music/Songs/New - Daya.mp3',
+                    image: 'SOURCE/Music/Covers/New.jpg' },
+                { id: 39, title: 'AM_PM', artist: 'NOTD & Maia Wright',
+                    url: 'SOURCE/Music/Songs/NOTD, Maia Wright - AM_PM.wav', image: 'SOURCE/Music/Covers/AM_PM.jpg' },
+                { id: 40, title: 'k (all i got to say)', artist: 'NUVILICES',
+                    url: 'SOURCE/Music/Songs/NUVILICES - k (all i got to say).wav', image: 'SOURCE/Music/Covers/k.jpg' },
+                { id: 41, title: 'Munn', artist: "Religion's Epitome",
+                    url: "SOURCE/Music/Songs/Religion_s Epitome - Munn.mp3",
+                    image: 'SOURCE/Music/Covers/Religion_s Epitome.jpg' },
+                { id: 42, title: 'Rich Love', artist: 'OneRepublic',
+                    url: 'SOURCE/Music/Songs/Rich Love - OneRepublic.mp3', image: 'SOURCE/Music/Covers/Rich Love.jpg' },
+                { id: 43, title: 'Riding Shotgun', artist: 'Kygo',
                     url: 'SOURCE/Music/Songs/Riding Shotgun - Kygo.mp3',
-                    image: 'SOURCE/Music/Covers/Riding Shotgun.jpg'
-                },
-                {
-                    id: 44,
-                    title: 'Rockabye',
-                    artist: 'Clean Bandit',
-                    url: 'SOURCE/Music/Songs/Rockabye- Clean Bandit.mp3',
-                    image: 'SOURCE/Music/Covers/Rockabye.jpg'
-                },
-                {
-                    id: 45,
-                    title: 'Savannah',
-                    artist: 'Diviners',
-                    url: 'SOURCE/Music/Songs/Savannah - Diviners.mp3',
-                    image: 'SOURCE/Music/Covers/Savannah.jpg'
-                },
-                {
-                    id: 46,
-                    title: 'Floating Through Space',
-                    artist: 'Sia & David Guetta',
+                    image: 'SOURCE/Music/Covers/Riding Shotgun.jpg' },
+                { id: 44, title: 'Rockabye', artist: 'Clean Bandit',
+                    url: 'SOURCE/Music/Songs/Rockabye- Clean Bandit.mp3', image: 'SOURCE/Music/Covers/Rockabye.jpg' },
+                { id: 45, title: 'Savannah', artist: 'Diviners', url: 'SOURCE/Music/Songs/Savannah - Diviners.mp3',
+                    image: 'SOURCE/Music/Covers/Savannah.jpg' },
+                { id: 46, title: 'Floating Through Space', artist: 'Sia & David Guetta',
                     url: 'SOURCE/Music/Songs/Sia, David Guetta - Floating Through Space.wav',
-                    image: 'SOURCE/Music/Covers/FloatingThroughSpace.jpg'
-                },
-                {
-                    id: 47,
-                    title: 'Mind Games',
-                    artist: 'Sickick',
-                    url: 'SOURCE/Music/Songs/Sickick - Mind Games.wav',
-                    image: 'SOURCE/Music/Covers/MindGames.jpg'
-                },
-                {
-                    id: 48,
-                    title: 'Standing Still',
-                    artist: 'Joakim Molitor',
+                    image: 'SOURCE/Music/Covers/FloatingThroughSpace.jpg' },
+                { id: 47, title: 'Mind Games', artist: 'Sickick',
+                    url: 'SOURCE/Music/Songs/Sickick - Mind Games.wav', image: 'SOURCE/Music/Covers/MindGames.jpg' },
+                { id: 48, title: 'Standing Still', artist: 'Joakim Molitor',
                     url: 'SOURCE/Music/Songs/Standing Still - Joakim Molitor.mp3',
-                    image: 'SOURCE/Music/Covers/Standing Still.jpg'
-                },
-                {
-                    id: 49,
-                    title: 'Stargazing',
-                    artist: 'Kygo',
-                    url: 'SOURCE/Music/Songs/Stargazing - Kygo.mp3',
-                    image: 'SOURCE/Music/Covers/Stargazing.jpg'
-                },
-                {
-                    id: 50,
-                    title: 'Just Hold On',
-                    artist: 'Steve Aoki',
+                    image: 'SOURCE/Music/Covers/Standing Still.jpg' },
+                { id: 49, title: 'Stargazing', artist: 'Kygo', url: 'SOURCE/Music/Songs/Stargazing - Kygo.mp3',
+                    image: 'SOURCE/Music/Covers/Stargazing.jpg' },
+                { id: 50, title: 'Just Hold On', artist: 'Steve Aoki',
                     url: 'SOURCE/Music/Songs/Steve Aoki, Louis Tomlinson - Just Hold On.wav',
-                    image: 'SOURCE/Music/Covers/JustHoldOn.jpg'
-                },
-                {
-                    id: 51,
-                    title: 'Summer Bath',
-                    artist: 'Wahidul Choudhury',
+                    image: 'SOURCE/Music/Covers/JustHoldOn.jpg' },
+                { id: 51, title: 'Summer Bath', artist: 'Wahidul Choudhury',
                     url: 'SOURCE/Music/Songs/Summer Bath - Wahidul Choudhury.mp3',
-                    image: 'SOURCE/Music/Covers/Summer Bath.jpg'
-                },
-                {
-                    id: 52,
-                    title: 'Getaway',
-                    artist: 'Syn Cole',
-                    url: 'SOURCE/Music/Songs/Syn Cole - Getaway.wav',
-                    image: 'SOURCE/Music/Covers/Getaway.jpg'
-                },
-                {
-                    id: 53,
-                    title: 'The Greatest',
-                    artist: 'Sia',
-                    url: 'SOURCE/Music/Songs/The Greatest - Sia.mp3',
-                    image: 'SOURCE/Music/Covers/The Greatest.jpg'
-                },
-                {
-                    id: 54,
-                    title: 'The Middle',
-                    artist: 'Zedd',
-                    url: 'SOURCE/Music/Songs/The Middle - Zedd.mp3',
-                    image: 'SOURCE/Music/Covers/The Middle.jpg'
-                },
-                {
-                    id: 55,
-                    title: 'Things I Love',
-                    artist: 'Lvly',
-                    url: 'SOURCE/Music/Songs/Things I Love - Lvly.mp3',
-                    image: 'SOURCE/Music/Covers/Things I Love.jpg'
-                },
-                {
-                    id: 56,
-                    title: 'this is what heartbreak feels like',
-                    artist: 'JVKE',
+                    image: 'SOURCE/Music/Covers/Summer Bath.jpg' },
+                { id: 52, title: 'Getaway', artist: 'Syn Cole', url: 'SOURCE/Music/Songs/Syn Cole - Getaway.wav',
+                    image: 'SOURCE/Music/Covers/Getaway.jpg' },
+                { id: 53, title: 'The Greatest', artist: 'Sia', url: 'SOURCE/Music/Songs/The Greatest - Sia.mp3',
+                    image: 'SOURCE/Music/Covers/The Greatest.jpg' },
+                { id: 54, title: 'The Middle', artist: 'Zedd', url: 'SOURCE/Music/Songs/The Middle - Zedd.mp3',
+                    image: 'SOURCE/Music/Covers/The Middle.jpg' },
+                { id: 55, title: 'Things I Love', artist: 'Lvly',
+                    url: 'SOURCE/Music/Songs/Things I Love - Lvly.mp3', image: 'SOURCE/Music/Covers/Things I Love.jpg' },
+                { id: 56, title: 'this is what heartbreak feels like', artist: 'JVKE',
                     url: 'SOURCE/Music/Songs/this is what heartbreak feels like - JVKE.mp3',
-                    image: 'SOURCE/Music/Covers/this is what heartbreak feels like.jpg'
-                },
-                {
-                    id: 57,
-                    title: 'Ritual',
-                    artist: 'Tiesto',
+                    image: 'SOURCE/Music/Covers/this is what heartbreak feels like.jpg' },
+                { id: 57, title: 'Ritual', artist: 'Tiesto',
                     url: 'SOURCE/Music/Songs/Tiësto, Jonas Blue, Rita Ora - Ritual.wav',
-                    image: 'SOURCE/Music/Covers/Ritual.jpg'
-                },
-                {
-                    id: 58,
-                    title: 'Harder',
-                    artist: 'Talay Riley',
+                    image: 'SOURCE/Music/Covers/Ritual.jpg' },
+                { id: 58, title: 'Harder', artist: 'Talay Riley',
                     url: 'SOURCE/Music/Songs/Tiësto, KSHMR, Talay Riley - Harder (feat. Talay Riley).wav',
-                    image: 'SOURCE/Music/Covers/Harder.jpg'
-                },
-                {
-                    id: 59,
-                    title: 'If Only I',
-                    artist: 'Two Friends',
+                    image: 'SOURCE/Music/Covers/Harder.jpg' },
+                { id: 59, title: 'If Only I', artist: 'Two Friends',
                     url: 'SOURCE/Music/Songs/Two Friends, Loud Luxury, Bebe Rexha - If Only I.wav',
-                    image: 'SOURCE/Music/Covers/IfOnlyI.jpg'
-                },
-                {
-                    id: 60,
-                    title: 'Summer Bath (alt)',
-                    artist: 'Wahidul Choudhury',
+                    image: 'SOURCE/Music/Covers/IfOnlyI.jpg' },
+                { id: 60, title: 'Summer Bath (Alt)', artist: 'Wahidul Choudhury',
                     url: 'SOURCE/Music/Songs/Wahidul Choudhury - Summer Bath.wav',
-                    image: 'SOURCE/Music/Covers/SummerBath.jpg'
-                },
-                {
-                    id: 61,
-                    title: 'Wake Me Up In Paris',
-                    artist: 'Anthony Keyrouz',
+                    image: 'SOURCE/Music/Covers/SummerBath.jpg' },
+                { id: 61, title: 'Wake Me Up In Paris', artist: 'Anthony Keyrouz',
                     url: 'SOURCE/Music/Songs/Wake Me Up In Paris - Anthony Keyrouz.mp3',
-                    image: 'SOURCE/Music/Covers/Wake Me Up In Paris.jpg'
-                },
-                {
-                    id: 62,
-                    title: 'Déjà Vu (alt)',
-                    artist: 'Yves V / INNA',
+                    image: 'SOURCE/Music/Covers/Wake Me Up In Paris.jpg' },
+                { id: 62, title: 'Déjà Vu (Alt)', artist: 'Yves V / INNA',
                     url: 'SOURCE/Music/Songs/Yves V, INNA, Janieck - Déjà Vu.wav',
-                    image: 'SOURCE/Music/Covers/DejaVu.jpg'
-                }
+                    image: 'SOURCE/Music/Covers/DejaVu.jpg' }
             ];
 
             // ==================== STATE ====================
@@ -1274,6 +1053,7 @@
             let isShuffled = false;
             let isDragging = false;
             let audioLoaded = false;
+            let isTouchDevice = false;
 
             // Shuffle order management
             let shuffleOrder = [];
@@ -1295,7 +1075,10 @@
                     progressFill.style.width = '0%';
                     progressThumb.style.left = '0%';
                     timeCurrent.textContent = '00:00';
-                    timeTotal.textContent = '00:00';
+                    // Keep existing total if it was set, or show 00:00
+                    if (timeTotal.textContent === '--:--' || timeTotal.textContent === '') {
+                        timeTotal.textContent = '00:00';
+                    }
                     return;
                 }
 
@@ -1309,18 +1092,26 @@
             function loadAlbumArt(track) {
                 albumArtContainer.classList.remove('image-loaded');
                 if (track.image && track.image.trim() !== '') {
-                    albumArtImage.src = track.image;
-                    albumArtImage.style.display = 'block';
-                    albumArtImage.onload = () => {
+                    // Use a new Image to preload, then swap
+                    const img = new Image();
+                    img.onload = function() {
+                        albumArtImage.src = track.image;
                         albumArtContainer.classList.add('image-loaded');
                     };
-                    albumArtImage.onerror = () => {
-                        // Fallback
-                        albumArtImage.style.display = 'none';
+                    img.onerror = function() {
+                        // Fallback: hide image, show fallback icon
+                        albumArtImage.removeAttribute('src');
+                        albumArtImage.style.opacity = '0';
                         albumArtContainer.classList.remove('image-loaded');
                     };
+                    img.src = track.image;
+                    // Also set the src directly so it starts loading
+                    if (albumArtImage.src !== track.image) {
+                        albumArtImage.src = track.image;
+                    }
                 } else {
-                    albumArtImage.style.display = 'none';
+                    albumArtImage.removeAttribute('src');
+                    albumArtImage.style.opacity = '0';
                     albumArtContainer.classList.remove('image-loaded');
                 }
             }
@@ -1329,8 +1120,10 @@
                 if (index < 0 || index >= playlist.length) return;
                 currentTrackIndex = index;
                 audioLoaded = false;
+
                 const track = playlist[index];
 
+                // Update UI immediately
                 songTitle.textContent = track.title;
                 songArtist.textContent = track.artist;
                 progressFill.style.width = '0%';
@@ -1340,29 +1133,37 @@
 
                 loadAlbumArt(track);
 
+                // Reset audio element
+                audio.pause();
+                audio.currentTime = 0;
+                // Clear any previous source by setting to empty first
+                audio.removeAttribute('src');
+                // Small delay to ensure the reset takes effect, then set new src
                 audio.src = track.url;
                 audio.load();
 
                 updatePlaylistHighlight();
 
-                if (!isPlaying) {
-                    albumArtContainer.classList.remove('playing');
-                }
-
+                // Update shuffle position if shuffle is active
                 if (isShuffled && shuffleOrder.length > 0) {
                     const pos = shuffleOrder.indexOf(currentTrackIndex);
                     if (pos !== -1) {
                         shufflePosition = pos;
                     } else {
-                        generateShuffleOrder();
-                        shufflePosition = shuffleOrder.indexOf(currentTrackIndex);
-                        if (shufflePosition === -1) shufflePosition = 0;
+                        // Track not in current shuffle order, regenerate
+                        generateShuffleOrderAround(currentTrackIndex);
+                        shufflePosition = 0;
                     }
+                }
+
+                if (!isPlaying) {
+                    albumArtContainer.classList.remove('playing');
                 }
             }
 
             function playTrack(index) {
-                if (index !== currentTrackIndex || !audioLoaded && index === currentTrackIndex) {
+                // If it's a different track, or same track but audio isn't loaded, reload
+                if (index !== currentTrackIndex || (!audioLoaded && index === currentTrackIndex)) {
                     loadTrack(index);
                 }
                 play();
@@ -1377,6 +1178,9 @@
                         console.warn('Playback prevented:', err.message);
                         setIsPlayingState(false);
                     });
+                } else {
+                    // Older browsers might not return a promise
+                    setIsPlayingState(true);
                 }
             }
 
@@ -1389,7 +1193,14 @@
                 if (isPlaying) {
                     pause();
                 } else {
-                    if (!audio.src || audio.src === window.location.href) {
+                    // Check if audio has a valid source
+                    const hasSource = audio.src &&
+                        audio.src !== window.location.href &&
+                        audio.src !== '' &&
+                        !audio.src.endsWith('/') &&
+                        audio.src !== 'about:blank';
+                    if (!hasSource) {
+                        // No track loaded yet, load the first one
                         loadTrack(currentTrackIndex);
                     }
                     play();
@@ -1412,28 +1223,38 @@
                 updatePlaylistHighlight();
             }
 
-            // Shuffle logic
-            function generateShuffleOrder() {
-                const allIndices = [...Array(playlist.length).keys()];
+            // ==================== SHUFFLE LOGIC ====================
+            function generateShuffleOrderAround(centerIndex) {
+                const allIndices = [];
+                for (let i = 0; i < playlist.length; i++) {
+                    if (i !== centerIndex) allIndices.push(i);
+                }
+                // Fisher-Yates shuffle
                 for (let i = allIndices.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
                 }
-                return allIndices;
+                shuffleOrder = [centerIndex, ...allIndices];
+            }
+
+            function generateFreshShuffleOrder(excludeFirst) {
+                const allIndices = [];
+                for (let i = 0; i < playlist.length; i++) {
+                    if (i !== excludeFirst) allIndices.push(i);
+                }
+                for (let i = allIndices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allIndices[i], allIndices[j]] = [allIndices[j], allIndices[i]];
+                }
+                // Pick a random starting point
+                const startIdx = allIndices.length > 0 ? allIndices[0] : excludeFirst;
+                return [startIdx, ...allIndices.filter(idx => idx !== startIdx)];
             }
 
             function enableShuffle() {
                 if (playlist.length === 0) return;
                 isShuffled = true;
-                const otherIndices = [];
-                for (let i = 0; i < playlist.length; i++) {
-                    if (i !== currentTrackIndex) otherIndices.push(i);
-                }
-                for (let i = otherIndices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [otherIndices[i], otherIndices[j]] = [otherIndices[j], otherIndices[i]];
-                }
-                shuffleOrder = [currentTrackIndex, ...otherIndices];
+                generateShuffleOrderAround(currentTrackIndex);
                 shufflePosition = 0;
                 btnShuffle.classList.add('active');
                 btnShuffle.title = 'Shuffle: On';
@@ -1461,16 +1282,23 @@
                 if (isShuffled && shuffleOrder.length > 0) {
                     let nextPos = shufflePosition + 1;
                     if (nextPos >= shuffleOrder.length) {
+                        // Exhausted shuffle order
                         if (repeatMode === 1) {
-                            const newOrder = generateShuffleOrder();
-                            shuffleOrder = newOrder;
+                            // Repeat all: generate fresh shuffle, avoid repeating last track as first
+                            const lastTrack = shuffleOrder[shuffleOrder.length - 1];
+                            const fresh = generateFreshShuffleOrder(lastTrack);
+                            shuffleOrder = fresh;
                             shufflePosition = 0;
                             return shuffleOrder[0];
                         } else if (repeatMode === 2) {
+                            // Repeat one
                             return currentTrackIndex;
                         } else {
-                            const newOrder = generateShuffleOrder();
-                            shuffleOrder = newOrder;
+                            // Repeat off: generate fresh shuffle but don't auto-play beyond this
+                            // We'll let the 'ended' event handle stopping
+                            const lastTrack = shuffleOrder[shuffleOrder.length - 1];
+                            const fresh = generateFreshShuffleOrder(lastTrack);
+                            shuffleOrder = fresh;
                             shufflePosition = 0;
                             return shuffleOrder[0];
                         }
@@ -1479,6 +1307,7 @@
                         return shuffleOrder[shufflePosition];
                     }
                 } else {
+                    // Normal sequential
                     let nextIndex = currentTrackIndex + 1;
                     if (nextIndex >= playlist.length) {
                         nextIndex = 0;
@@ -1512,8 +1341,10 @@
 
             function prevTrack() {
                 if (playlist.length === 0) return;
-                if (audio.currentTime > 3) {
+                // If more than 3 seconds in, restart current track
+                if (audio.currentTime > 3 && audioLoaded) {
                     audio.currentTime = 0;
+                    updateProgressUI();
                     if (!isPlaying) play();
                     return;
                 }
@@ -1551,7 +1382,7 @@
                 let clickX = clientX - rect.left;
                 clickX = Math.max(0, Math.min(clickX, rect.width));
                 const percent = clickX / rect.width;
-                if (!isNaN(audio.duration) && audio.duration > 0) {
+                if (!isNaN(audio.duration) && audio.duration > 0 && isFinite(audio.duration)) {
                     audio.currentTime = percent * audio.duration;
                 }
                 updateProgressUI();
@@ -1566,11 +1397,14 @@
                     if (index === currentTrackIndex && isPlaying) {
                         li.classList.add('active');
                     }
+                    li.setAttribute('role', 'button');
+                    li.setAttribute('tabindex', '0');
+                    li.setAttribute('aria-label', `Play: ${track.title} by ${track.artist}`);
                     li.innerHTML = `
                             <span class="playlist-item-number">${String(index + 1).padStart(2, '0')}</span>
                             <div class="playlist-item-info">
-                                <div class="playlist-item-title">${track.title}</div>
-                                <div class="playlist-item-artist">${track.artist}</div>
+                                <div class="playlist-item-title">${escapeHTML(track.title)}</div>
+                                <div class="playlist-item-artist">${escapeHTML(track.artist)}</div>
                             </div>
                             <span class="playlist-item-playing-icon">
                                 <i class="fa-solid fa-volume-high"></i>
@@ -1580,9 +1414,24 @@
                         playTrack(index);
                         closePlaylist();
                     });
+                    // Keyboard accessibility
+                    li.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            playTrack(index);
+                            closePlaylist();
+                        }
+                    });
                     playlistList.appendChild(li);
                 });
-                playlistCount.textContent = playlist.length + ' track' + (playlist.length !== 1 ? 's' : '');
+                playlistCount.textContent = playlist.length + ' track' + (playlist.length !== 1 ? 's' :
+                    '');
+            }
+
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
             }
 
             function updatePlaylistHighlight() {
@@ -1596,11 +1445,20 @@
                 });
             }
 
+            function scrollToActivePlaylistItem() {
+                const activeItem = playlistList.querySelector('.playlist-item.active');
+                if (activeItem) {
+                    activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
             function openPlaylist() {
                 playlistPanel.classList.add('open');
                 playlistOverlay.classList.add('open');
                 document.body.style.overflow = 'hidden';
                 renderPlaylist();
+                // Small delay to let the panel slide in, then scroll
+                setTimeout(scrollToActivePlaylistItem, 400);
             }
 
             function closePlaylist() {
@@ -1619,38 +1477,55 @@
             playlistCloseBtn.addEventListener('click', closePlaylist);
             playlistOverlay.addEventListener('click', closePlaylist);
 
+            // Detect touch device
+            isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
             document.addEventListener('keydown', (e) => {
+                // Escape: close playlist
                 if (e.key === 'Escape' && playlistPanel.classList.contains('open')) {
                     closePlaylist();
+                    return;
                 }
-                if (e.key === ' ' && !playlistPanel.classList.contains('open') &&
-                    document.activeElement === document.body) {
-                    e.preventDefault();
-                    togglePlayPause();
-                }
-                if (e.key === 'ArrowRight' && !playlistPanel.classList.contains('open') &&
-                    document.activeElement === document.body) {
-                    e.preventDefault();
-                    nextTrack();
-                }
-                if (e.key === 'ArrowLeft' && !playlistPanel.classList.contains('open') &&
-                    document.activeElement === document.body) {
-                    e.preventDefault();
-                    prevTrack();
-                }
-                if (e.key === 's' && !playlistPanel.classList.contains('open') &&
-                    document.activeElement === document.body) {
-                    e.preventDefault();
-                    toggleShuffle();
+                // Only handle keyboard shortcuts when playlist is closed and no input is focused
+                const isInputFocused = document.activeElement &&
+                    (document.activeElement.tagName === 'INPUT' ||
+                        document.activeElement.tagName === 'TEXTAREA' ||
+                        document.activeElement.isContentEditable);
+                if (playlistPanel.classList.contains('open') || isInputFocused) return;
+
+                switch (e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        togglePlayPause();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        nextTrack();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        prevTrack();
+                        break;
+                    case 's':
+                    case 'S':
+                        e.preventDefault();
+                        toggleShuffle();
+                        break;
+                    case 'r':
+                    case 'R':
+                        e.preventDefault();
+                        cycleRepeatMode();
+                        break;
+                    default:
+                        break;
                 }
             });
 
-            progressContainer.addEventListener('click', (e) => {
-                if (isDragging) return;
-                seekToPosition(e.clientX);
-            });
-
+            // ==================== PROGRESS BAR INTERACTIONS ====================
+            // Mouse events
             progressContainer.addEventListener('mousedown', (e) => {
+                if (isTouchDevice) return; // Let touch events handle it on touch devices
+                e.preventDefault();
                 isDragging = true;
                 progressContainer.classList.add('dragging');
                 seekToPosition(e.clientX);
@@ -1668,6 +1543,7 @@
                 document.addEventListener('mouseup', onMouseUp);
             });
 
+            // Touch events
             progressContainer.addEventListener('touchstart', (e) => {
                 isDragging = true;
                 progressContainer.classList.add('dragging');
@@ -1686,6 +1562,14 @@
                 document.addEventListener('touchend', onTouchEnd);
             });
 
+            // Click on progress (for quick seeks without dragging, mainly for mouse)
+            progressContainer.addEventListener('click', (e) => {
+                if (isDragging) return;
+                if (isTouchDevice) return; // Touch uses touchstart
+                seekToPosition(e.clientX);
+            });
+
+            // ==================== AUDIO EVENTS ====================
             audio.addEventListener('timeupdate', () => {
                 if (!isDragging) {
                     updateProgressUI();
@@ -1717,17 +1601,36 @@
 
             audio.addEventListener('ended', () => {
                 if (repeatMode === 2) {
+                    // Repeat one: restart the same track
                     audio.currentTime = 0;
                     play();
                 } else if (repeatMode === 1) {
+                    // Repeat all: go to next track (wraps around)
                     nextTrack();
                 } else {
-                    if (currentTrackIndex < playlist.length - 1 || isShuffled) {
-                        nextTrack();
+                    // Repeat off
+                    if (isShuffled) {
+                        // With shuffle, check if we've exhausted the order
+                        if (shufflePosition + 1 >= shuffleOrder.length) {
+                            // End of shuffle order, generate new one and continue
+                            const lastTrack = shuffleOrder[shuffleOrder.length - 1];
+                            const fresh = generateFreshShuffleOrder(lastTrack);
+                            shuffleOrder = fresh;
+                            shufflePosition = 0;
+                            playTrack(shuffleOrder[0]);
+                        } else {
+                            nextTrack();
+                        }
                     } else {
-                        loadTrack(0);
-                        setIsPlayingState(false);
-                        updateProgressUI();
+                        // Sequential: if last track, stop; otherwise go next
+                        if (currentTrackIndex >= playlist.length - 1) {
+                            // Last track, stop playing
+                            loadTrack(0);
+                            setIsPlayingState(false);
+                            updateProgressUI();
+                        } else {
+                            nextTrack();
+                        }
                     }
                 }
             });
@@ -1740,13 +1643,23 @@
                 timeCurrent.textContent = '00:00';
                 progressFill.style.width = '0%';
                 progressThumb.style.left = '0%';
-                if (isPlaying) {
+                // Auto-advance after a short delay if the track can't be played
+                if (isPlaying || audio.autoplay) {
                     setTimeout(() => {
-                        if (currentTrackIndex < playlist.length - 1 || isShuffled) {
+                        if (playlist.length > 1) {
                             nextTrack();
                         }
                     }, 1500);
                 }
+            });
+
+            // Handle when audio is waiting/buffering
+            audio.addEventListener('waiting', () => {
+                // Could show a buffering indicator here if desired
+            });
+
+            audio.addEventListener('stalled', () => {
+                console.warn('Audio stalled for track:', playlist[currentTrackIndex]?.title);
             });
 
             // ==================== INITIALIZATION ====================
@@ -1757,16 +1670,20 @@
                 loadTrack(0);
                 updateProgressUI();
                 setIsPlayingState(false);
+                // Preload the first track
                 audio.load();
             }
 
             init();
 
-            console.log('🎵 Fullscreen Music Player with Album Art Ready');
-            console.log('   Controls: Play/Pause | Prev | Next | Repeat | Shuffle');
-            console.log('   List icon top-right for playlist');
-            console.log('   Drag progress bar to seek');
-            console.log('   Keyboard: Space=Play/Pause, Arrows=Prev/Next, S=Toggle Shuffle, Esc=Close playlist');
+            console.log('🎵 Fullscreen Music Player Ready');
+            console.log('   📋 ' + playlist.length + ' tracks loaded');
+            console.log('   🎮 Controls: Play/Pause | Prev | Next | Repeat | Shuffle');
+            console.log('   📜 List icon (top-right) opens playlist panel');
+            console.log('   🖱️  Drag progress bar to seek');
+            console.log(
+                '   ⌨️  Keyboard: Space=Play/Pause | ←→ =Prev/Next | S=Shuffle | R=Repeat | Esc=Close playlist');
+            console.log('   📱 Touch-friendly with responsive design');
         })();
     </script>
 </body>
