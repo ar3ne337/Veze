@@ -3,22 +3,30 @@
  * Fully fixed version with:
  * - Robust fallback for missing images
  * - Correct path handling (ignores JSON folder, uses SOURCE/Image/Gallery/ or SOURCE/Image/Pins/)
- * - Thumbnails display with their original aspect ratio, sized down (max-width: 300px)
+ * - Gallery columns limited to 300px width – images fill them perfectly, no gaps
  * - Fixed viewer loading & gallery stability
  */
 
 // ==============================
-// SIZE CONTROL – inject a max-width for gallery thumbnails
+// SIZE CONTROL – cap gallery columns to 300px
 // ==============================
-(function shrinkGalleryThumbnails() {
+(function resizeGalleryColumns() {
   const style = document.createElement('style');
   style.textContent = `
+    .vz-gallery-column {
+      flex: 0 1 300px;   /* don't grow beyond 300px, can shrink */
+      max-width: 300px;
+    }
+    #vz-gallery-columns {
+      justify-content: center;   /* center the columns */
+    }
+    /* remove any conflicting max-width from images */
     .vz-gallery-thumb img {
-      max-width: 300px;      /* ← adjust as needed (e.g., 200px, 400px, 50% ) */
+      max-width: none;
       width: 100%;
       height: auto;
       display: block;
-      margin: 0 auto;        /* center the image in its column */
+      aspect-ratio: var(--ar, auto);  /* fallback, set by JS */
     }
   `;
   document.head.appendChild(style);
@@ -439,19 +447,18 @@ function createGalleryItem(pieceData) {
     imagePath = `SOURCE/Image/Gallery/${filename}`;
   }
 
-  // Create thumbnail <img> element with native aspect ratio
+  // Create thumbnail <img> element – fills the column (capped by CSS)
   const img = document.createElement("img");
   img.src = imagePath;
   img.alt = displayName;
   img.draggable = false;
 
-  // Let the image keep its own proportions, but capped by the injected CSS
   img.style.width = "100%";
   img.style.height = "auto";
   img.style.display = "block";
-  img.style.aspectRatio = aspectRatio;
+  img.style.aspectRatio = aspectRatio;  // fallback while loading
 
-  // Fallback if image still fails to load
+  // Fallback if image fails
   img.onerror = function () {
     if (this.src !== MISSING_IMAGE_PLACEHOLDER) {
       this.src = MISSING_IMAGE_PLACEHOLDER;
@@ -459,13 +466,12 @@ function createGalleryItem(pieceData) {
     }
   };
 
-  // Clear container and insert image
   thumbnail.innerHTML = "";
   thumbnail.appendChild(img);
 
   title.innerText = displayName;
 
-  // OPEN VIEWER (using the same final path)
+  // OPEN VIEWER
   wrapper.addEventListener("mouseup", () => {
     openArtViewer(
       GALLERY_VIEWER,
@@ -478,7 +484,7 @@ function createGalleryItem(pieceData) {
     );
   });
 
-  // COLUMN PLACEMENT (masonry logic)
+  // COLUMN PLACEMENT (masonry logic – works correctly with capped columns)
   let shortest = Infinity;
   for (let i = 0; i < galleryColumnOffs.length; i++) {
     if (galleryColumnOffs[i] < shortest) {
