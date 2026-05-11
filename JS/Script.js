@@ -3,9 +3,26 @@
  * Fully fixed version with:
  * - Robust fallback for missing images
  * - Correct path handling (ignores JSON folder, uses SOURCE/Image/Gallery/ or SOURCE/Image/Pins/)
- * - Thumbnails display with their original aspect ratio (no forced cropping)
+ * - Thumbnails display with their original aspect ratio, sized down (max-width: 300px)
  * - Fixed viewer loading & gallery stability
  */
+
+// ==============================
+// SIZE CONTROL – inject a max-width for gallery thumbnails
+// ==============================
+(function shrinkGalleryThumbnails() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .vz-gallery-thumb img {
+      max-width: 300px;      /* ← adjust as needed (e.g., 200px, 400px, 50% ) */
+      width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;        /* center the image in its column */
+    }
+  `;
+  document.head.appendChild(style);
+})();
 
 // ==============================
 // UTILITY HELPERS
@@ -428,11 +445,10 @@ function createGalleryItem(pieceData) {
   img.alt = displayName;
   img.draggable = false;
 
-  // Let the image keep its own proportions
+  // Let the image keep its own proportions, but capped by the injected CSS
   img.style.width = "100%";
   img.style.height = "auto";
   img.style.display = "block";
-  // Fallback aspect ratio for layout before the image loads
   img.style.aspectRatio = aspectRatio;
 
   // Fallback if image still fails to load
