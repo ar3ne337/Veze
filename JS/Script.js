@@ -4,6 +4,7 @@
  * - Robust fallback for missing images
  * - Correct path handling (ignores JSON folder, uses SOURCE/Image/Gallery/ or SOURCE/Image/Pins/)
  * - Gallery columns limited to 300px width – images fill them perfectly, no gaps
+ * - Pins bottom row restored to original layout (height-based, correct ratio)
  * - Fixed viewer loading & gallery stability
  */
 
@@ -28,6 +29,19 @@
       display: block;
       aspect-ratio: var(--ar, auto);  /* fallback, set by JS */
     }
+
+    /* Ensure pins bottom images use original CSS */
+    #vz-pins-bottom-scroller img {
+      /* original values from your CSS, repeated here just in case */
+      height: 95%;
+      aspect-ratio: 9/16;
+      border: 1px solid var(--vz-btn-hover-color);
+      cursor: pointer;
+      filter: grayscale();
+      transition: filter 0.5s ease-out, outline-color 0.5s;
+      flex-shrink: 0;
+    }
+    /* Inline aspect-ratio from JS will override the hardcoded 9/16 */
   `;
   document.head.appendChild(style);
 })();
@@ -568,7 +582,7 @@ function renderPins() {
   PINS_TOP_ROW.innerHTML = "";
   PINS_BOTTOM_SCROLLER.innerHTML = "";
 
-  // BIG IMAGES
+  // BIG IMAGES (unchanged – fill top row)
   const bigImages = pinsData.big || [];
   bigImages.forEach((img) => {
     const raw = typeof img === "string" ? img : img.file;
@@ -606,7 +620,7 @@ function renderPins() {
     PINS_TOP_ROW.appendChild(imgEl);
   });
 
-  // SMALL IMAGES
+  // SMALL IMAGES – RESTORED ORIGINAL LAYOUT
   const smallImages = pinsData.small || [];
   smallImages.forEach((img) => {
     const raw = typeof img === "string" ? img : img.file;
@@ -618,8 +632,8 @@ function renderPins() {
     imgEl.src = `SOURCE/Image/Pins/${raw}`;
     imgEl.setAttribute("ar", aspectRatio);
     imgEl.draggable = false;
-    imgEl.style.width = "100%";
-    imgEl.style.height = "auto";
+
+    // Only set the aspect-ratio inline – let the CSS handle width/height
     imgEl.style.aspectRatio = aspectRatio;
 
     imgEl.onerror = function () {
